@@ -1,0 +1,24 @@
+# Runtime for DINO-WM PushT planning on Python 3.12 / RTX 5090. The exact resolved set is in results/env_freeze.txt.
+torch
+torchvision
+numpy==1.26.4
+einops
+hydra-core==1.3.2
+omegaconf==2.3.0
+hydra-submitit-launcher
+submitit
+wandb
+gym==0.23.1
+pygame
+pymunk==6.8.0
+shapely
+opencv-python-headless==4.10.0.84
+scikit-image==0.24.0
+matplotlib
+decord==0.6.0
+imageio
+imageio-ffmpeg
+psutil
+cloudpickle
+pillow
+accelerate
