@@ -324,6 +324,38 @@ def profile(S, name, args, device, out):
     return rows
 
 
+def scaling(S, args, device):
+    """World-model cost of one CEM iteration against the number of candidates K: latency of one rollout call
+    (start-frame latents already cached in the cache variants, as in every iteration of a plan after the first)."""
+    from utils import move_to_device
+    wm, pl = S["wm"], S["planner"]
+    o0 = move_to_device(pl.preprocessor.transform_obs({k: v[:1] for k, v in S["obs_0"].items()}), device)
+    rows = []
+    for name in args.variants.split(","):
+        with Variant(wm, name) as var:
+            for K in [int(k) for k in args.scaling_k.split(",")]:
+                obs = {k: v.expand(K, *v.shape[1:]).contiguous() for k, v in o0.items()}
+                torch.manual_seed(K); act = torch.randn(K, pl.horizon, pl.action_dim, device=device)
+                var.new_plan(); ts = []
+                if device.type == "cuda":
+                    torch.cuda.empty_cache(); torch.cuda.reset_peak_memory_stats(device)
+                try:
+                    for _ in range(args.scaling_warmup + args.scaling_reps):
+                        sync(device); t = time.perf_counter()
+                        with torch.no_grad():
+                            wm.rollout(obs, act)
+                        sync(device); ts.append(time.perf_counter() - t)
+                except torch.OutOfMemoryError:
+                    rows.append({"variant": name, "K": K, "oom": True}); continue
+                ts = np.array(ts[args.scaling_warmup:]) * 1e3
+                rows.append({"variant": name, "K": K, "median_ms": float(np.median(ts)), "min_ms": float(ts.min()),
+                             "p95_ms": float(np.percentile(ts, 95)), "ms_per_candidate": float(np.median(ts)) / K,
+                             "peak_mem_alloc_mb": torch.cuda.max_memory_allocated(device) / 2**20 if device.type == "cuda" else 0.0,
+                             "warmup": args.scaling_warmup, "reps": args.scaling_reps})
+                print("scaling", json.dumps(rows[-1]), flush=True)
+    return rows
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", required=True); ap.add_argument("--variants", default=",".join(VARIANTS))
@@ -333,6 +365,9 @@ def main():
     ap.add_argument("--opt-steps", type=int, default=30); ap.add_argument("--seed", type=int, default=99)
     ap.add_argument("--warmup", type=int, default=1); ap.add_argument("--phase-tasks", type=int, default=5)
     ap.add_argument("--n-plot", type=int, default=10); ap.add_argument("--profile", action="store_true")
+    ap.add_argument("--scaling", action="store_true", help="also time one rollout call against the candidate count K")
+    ap.add_argument("--scaling-k", default="1,2,4,8,16,32,64,128,256,300"); ap.add_argument("--skip-plans", action="store_true")
+    ap.add_argument("--scaling-warmup", type=int, default=3); ap.add_argument("--scaling-reps", type=int, default=20)
     ap.add_argument("--device", default="cuda:0", help="cpu = functional dry run only (fp16 variant needs cuda)")
     ap.add_argument("--eval-mode", action="store_true", help="call wm.eval() (the official plan.py does not)")
     args = ap.parse_args()
@@ -341,7 +376,10 @@ def main():
     S = load(args, device)
     M = meta(args, S, device); print(json.dumps(M, indent=1), flush=True)
     result = {"meta": M, "selfcheck": selfcheck(S, args, device), "reference": reference_rows(S, out), "variants": {}}
-    for name in args.variants.split(","):
+    if args.scaling:
+        result["scaling"] = scaling(S, args, device)
+        (out / "results.json").write_text(json.dumps(result))
+    for name in [] if args.skip_plans else args.variants.split(","):
         if args.profile:
             result.setdefault("profile_top_ops", {})[name] = profile(S, name, args, device, out)
         result["variants"][name] = run_variant(S, name, args, device, out)

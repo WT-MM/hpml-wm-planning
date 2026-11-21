@@ -2,4 +2,4 @@ __pycache__/
 *.pyc
 .DS_Store
 box/
-results/cpudry/
+results/cpudry*/
