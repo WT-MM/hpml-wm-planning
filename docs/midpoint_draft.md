@@ -52,7 +52,7 @@ Experiment tracking dashboard (W&B): https://wandb.ai/wesley-maa-columbia-univer
 checkpoint runs end to end in our harness: 16 tasks sampled from the validation split as in the official
 `goal_source='dset'` protocol, open-loop CEM plan, execution in the simulator. Sanity rows: the dataset's own actions
 reach the goal on every task, zero actions on none. Every metric is reported with: RTX 5090, driver 580.142,
-PyTorch 2.15.0 + CUDA 13.2, eager mode, fp32 (fp16 autocast only where named), TF32 matmul off, batch = 300
+PyTorch 2.15.0 + CUDA 13.2, eager mode, fp32 (fp16 autocast only where named), TF32 off for matmul and on for cuDNN convolutions (the PyTorch defaults), batch = 300
 candidates, context 3 frames x 196 tokens, warm-up = 1 discarded plan, 1 timed plan per task over 16 paired tasks,
 seed 99, `time.perf_counter` around the planner call with `torch.cuda.synchronize` before and after, the other GPU
 idle. (16 tasks rather than the planned 50: one official plan takes 71.6 s and the GPU slot was shared. Latency varies

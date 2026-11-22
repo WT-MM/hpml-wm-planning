@@ -29,7 +29,7 @@ def paired_speedup(a, b):
 
 
 print(f"Hardware: {M['gpu']} (driver {M['driver']}), {M['cpu']}; torch {M['torch']}, CUDA {M['cuda']}, cuDNN {M['cudnn']}, "
-      f"{M['backend']}; dtype {M['dtype']}; TF32 matmul {M['tf32_matmul']}.")
+      f"{M['backend']}; dtype {M['dtype']}; TF32 matmul {M['tf32_matmul']}, TF32 cuDNN {M['tf32_cudnn']}.")
 print(f"Model: {M['model']}; context {M['num_hist']} frames x {M['tokens_per_frame']} tokens; DINO-WM commit {M['dino_wm_commit'][:7]}.")
 
 if V:

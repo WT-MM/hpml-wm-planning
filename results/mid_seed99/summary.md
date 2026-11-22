@@ -1,4 +1,4 @@
-Hardware: NVIDIA GeForce RTX 5090 (driver 580.142), AMD Ryzen 9 9950X 16-Core Processor; torch 2.15.0+cu132, CUDA 13.2, cuDNN 92600, PyTorch eager, no torch.compile; dtype float32 (fp16 autocast in *_fp16 variants); TF32 matmul False.
+Hardware: NVIDIA GeForce RTX 5090 (driver 580.142), AMD Ryzen 9 9950X 16-Core Processor; torch 2.15.0+cu132, CUDA 13.2, cuDNN 92600, PyTorch eager, no torch.compile; dtype float32 (fp16 autocast in *_fp16 variants); TF32 matmul False, TF32 cuDNN True.
 Model: DINO-WM pusht (model_latest.pth), encoder dinov2_vits14, predictor ViT depth 6 heads 16; context 3 frames x 196 tokens; DINO-WM commit 0a9492f.
 Workload: CEM 30 iterations x 300 candidates (batch), horizon 5 (frameskip 5), top-30; 16 paired tasks, seed 99; warm-up 1 plan(s) discarded; 1 plan per task; time.perf_counter around planner.plan with torch.cuda.synchronize before and after.
 
