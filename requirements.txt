@@ -7,7 +7,7 @@ hydra-core==1.3.2
 omegaconf==2.3.0
 hydra-submitit-launcher
 submitit
-wandb
+-r requirements-wandb.txt
 gym==0.23.1
 pygame
 pymunk==6.8.0

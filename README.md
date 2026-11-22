@@ -51,8 +51,8 @@ Full tables (phase split, profiler kernels, rollout cost vs candidates, equivale
 ![latency and phase split](results/mid2_all/summary.png)
 
 Each run folder under `results/` holds `results.json`, `summary.md`, figures, profiler tables and rollout images.
-The runs are also on Weights & Biases: https://wandb.ai/wesley-maa-columbia-university/hpml-wm-planning (uploaded with
-`python bench/wandb_upload.py results/mid2_all/results.json --entity ENTITY`).
+The runs are also on Weights & Biases: https://wandb.ai/wesley-maa-columbia-university/hpml-wm-planning (see
+"Track results with Weights & Biases" below).
 
 `bench/draftscan.py` is a separate exploration (draft-and-verify scoring of CEM candidates), not part of these tables.
 
@@ -73,6 +73,40 @@ python bench/summarize.py runs/mid_seed99/results.json
 
 `planbench.py` starts with a self-check that the optimized rollouts match the official rollout on the same inputs.
 `--device cpu --n-tasks 2 --num-samples 8 --opt-steps 2` is a quick functional dry run.
+
+## Track results with Weights & Biases
+
+`bench/import_wandb.py` uploads saved `results.json` files to W&B without loading the model or a GPU. Each variant
+becomes one run holding the recorded summary metrics, per-task and per-K series for charts, the task / scaling /
+profiler tables, and the source JSON as an artifact. Nothing is re-measured; the only derived number is
+`derived/speedup_vs_official`.
+
+Preview what would be uploaded (standard library only, no login):
+
+```bash
+python bench/import_wandb.py --results results/mid2_all --dry-run
+```
+
+Upload (`wandb login` first, or set `WANDB_API_KEY`; the default project is `hpml-wm-planning`):
+
+```bash
+python -m pip install -r requirements-wandb.txt
+python bench/import_wandb.py --results results/mid2_all --entity YOUR_USER_OR_TEAM
+```
+
+- Runs are named `historical-<folder>-<variant>` and tagged `historical`. W&B's timestamps belong to the import, and
+  automatic machine capture is off; the benchmark's own hardware and settings are in the run config under `benchmark`.
+- Run IDs are hashes of the result file's content and the variant name, so importing the same file again skips finished
+  runs instead of duplicating them. Import serially per project.
+- Memory fields are named `*_mb` but hold MiB (`bytes / 2**20`).
+- Inputs are validated before any upload; scaling-only files from `--skip-plans` are not supported.
+
+Tests need no W&B or login. With `requirements-wandb.txt` installed, `HPML_WANDB_SDK_TEST=1` also runs the real SDK
+offline:
+
+```bash
+python -m unittest discover -s tests -v
+```
 
 ## Credits
 
