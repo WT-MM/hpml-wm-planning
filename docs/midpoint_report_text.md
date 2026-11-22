@@ -174,7 +174,7 @@ Cost of reuse: peak GPU memory rises from 3.7 to 9.2 GiB for the cached keys and
 # Future Work
 Remaining Work & Experiments
 1.  Train G and the equal-cost independent predictor; measure ranking error (elite overlap, best-candidate agreement) and task success against planning latency.
-2.  Draft and verify: score all candidates with a cheap draft (the same predictor on a subset of patch tokens or a shorter context, or G), re-score only the draft's top candidates with the full model, and keep CEM's elites exact. Baseline to beat: the full model with fewer samples at equal compute.
+2.  Draft and verify: a cheap draft scores all candidates and the full model re-scores only the draft's top few. First look on 16 tasks (results/draft1): 150 samples match 300 at 2.0x, which is the baseline to beat; a shorter-context draft keeps plan quality but reaches only 1.6x; random token subsets fail. So G has to rank like the shorter-context draft at about a tenth of the full model's cost.
 3.  Controls: Jacobian linearization at the reference and copy-the-reference.
 4.  Closed-loop MPC evaluation: 3 seeds x at least 200 paired tasks; median and tail latency, throughput, memory.
 5.  Other systems work: candidates split across both GPUs (cost is linear in K), unmasked per-frame attention calls, Nsight Systems trace. CUDA Graphs are not planned: GPU kernels already fill 14.3 s of the 14.3 s fp16 plan.

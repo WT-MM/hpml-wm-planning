@@ -54,7 +54,8 @@ Each run folder under `results/` holds `results.json`, `summary.md`, figures, pr
 The runs are also on Weights & Biases: https://wandb.ai/wesley-maa-columbia-university/hpml-wm-planning (see
 "Track results with Weights & Biases" below).
 
-`bench/draftscan.py` is a separate exploration (draft-and-verify scoring of CEM candidates), not part of these tables.
+`bench/draftscan.py` is a separate exploration (draft-and-verify scoring of CEM candidates), not part of these tables;
+its first results are in `results/draft1/summary.md`.
 
 ## Reproduce
 

@@ -19,8 +19,8 @@ for n in new:
     R["selfcheck"][n] = X["selfcheck"][n]
     if n in X.get("profile_top_ops", {}):
         R.setdefault("profile_top_ops", {})[n] = X["profile_top_ops"][n]
-order = [n for n in pb_order if n in R["variants"]] if (pb_order := ["official", "cache", "cache_sdpa", "cache_sdpa_tf32", "cache_sdpa_fp16",
-                                                                    "fp16_compile", "fp16_reuse", "fp16_reuse_compile"]) else []
+order = [n for n in ("official", "cache", "cache_sdpa", "cache_sdpa_tf32", "cache_sdpa_fp16", "fp16_compile", "fp16_reuse",
+                     "fp16_reuse_compile") if n in R["variants"]]
 order += [n for n in R["variants"] if n not in order]
 R["variants"] = {n: R["variants"][n] for n in order}
 if "profile_top_ops" in R:

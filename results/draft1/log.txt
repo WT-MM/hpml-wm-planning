@@ -1,0 +1,133 @@
+$HPML_W/dino_wm/custom_resolvers.py:4: UserWarning: 
+The version_base parameter is not specified.
+Please specify a compatability version level, or None.
+Will assume defaults for version 1.1
+  @hydra.main(config_path=None)
+Loaded 18685 rollouts
+Loaded 21 rollouts
+Resuming from epoch 2: $HPML_W/ckpt/outputs/pusht/checkpoints/model_latest.pth
+Using cache found in $HPML_W/cache/torch/hub/facebookresearch_dinov2_main
+num_action_repeat: 1
+num_proprio_repeat: 1
+proprio encoder: ProprioceptiveEmbedding(
+  (patch_embed): Conv1d(4, 10, kernel_size=(1,), stride=(1,))
+)
+action encoder: ProprioceptiveEmbedding(
+  (patch_embed): Conv1d(10, 10, kernel_size=(1,), stride=(1,))
+)
+proprio_dim: 10, after repeat: 10
+action_dim: 10, after repeat: 10
+emb_dim: 404
+Model emb_dim:  404
+check {"cem_vs_official_max_abs_action_diff": 0.0, "all_token_draft_vs_full_max_abs_loss_diff": 0.0, "loss_spread": 1.3729345798492432}
+[scan] task 0 tok0.5:r@60=0.27 tok0.25:r@60=0.15 tok0.125:r@60=0.03 ctx1:r@60=1.00 tok0.25+ctx1:r@60=0.27
+[scan] task 1 tok0.5:r@60=0.15 tok0.25:r@60=0.35 tok0.125:r@60=0.22 ctx1:r@60=1.00 tok0.25+ctx1:r@60=0.21
+[scan] task 2 tok0.5:r@60=0.33 tok0.25:r@60=0.12 tok0.125:r@60=0.17 ctx1:r@60=0.92 tok0.25+ctx1:r@60=0.13
+[scan] task 3 tok0.5:r@60=0.14 tok0.25:r@60=0.11 tok0.125:r@60=0.10 ctx1:r@60=0.83 tok0.25+ctx1:r@60=0.14
+[scan] task 4 tok0.5:r@60=0.22 tok0.25:r@60=0.15 tok0.125:r@60=0.20 ctx1:r@60=0.95 tok0.25+ctx1:r@60=0.16
+[scan] task 5 tok0.5:r@60=0.27 tok0.25:r@60=0.19 tok0.125:r@60=0.13 ctx1:r@60=0.94 tok0.25+ctx1:r@60=0.24
+[scan] task 6 tok0.5:r@60=0.26 tok0.25:r@60=0.24 tok0.125:r@60=0.14 ctx1:r@60=1.00 tok0.25+ctx1:r@60=0.15
+[scan] task 7 tok0.5:r@60=0.65 tok0.25:r@60=0.29 tok0.125:r@60=0.08 ctx1:r@60=0.97 tok0.25+ctx1:r@60=0.29
+[scan] task 8 tok0.5:r@60=0.21 tok0.25:r@60=0.14 tok0.125:r@60=0.11 ctx1:r@60=1.00 tok0.25+ctx1:r@60=0.22
+[scan] task 9 tok0.5:r@60=0.27 tok0.25:r@60=0.32 tok0.125:r@60=0.22 ctx1:r@60=0.96 tok0.25+ctx1:r@60=0.31
+[scan] task 10 tok0.5:r@60=0.10 tok0.25:r@60=0.27 tok0.125:r@60=0.10 ctx1:r@60=0.97 tok0.25+ctx1:r@60=0.37
+[scan] task 11 tok0.5:r@60=0.12 tok0.25:r@60=0.28 tok0.125:r@60=0.05 ctx1:r@60=0.89 tok0.25+ctx1:r@60=0.44
+[scan] task 12 tok0.5:r@60=0.15 tok0.25:r@60=0.05 tok0.125:r@60=0.14 ctx1:r@60=0.71 tok0.25+ctx1:r@60=0.09
+[scan] task 13 tok0.5:r@60=0.27 tok0.25:r@60=0.21 tok0.125:r@60=0.14 ctx1:r@60=0.98 tok0.25+ctx1:r@60=0.29
+[scan] task 14 tok0.5:r@60=0.34 tok0.25:r@60=0.09 tok0.125:r@60=0.15 ctx1:r@60=0.99 tok0.25+ctx1:r@60=0.17
+[scan] task 15 tok0.5:r@60=0.13 tok0.25:r@60=0.16 tok0.125:r@60=0.08 ctx1:r@60=1.00 tok0.25+ctx1:r@60=0.13
+Success rate:  0.9375
+        True,  True,  True,  True,  True,  True,  True]), 'state_dist': array([19.160452, 19.036884, 75.93622 , 33.237072, 35.55447 , 32.01074 ,
+       16.957542, 31.903015, 18.152048, 33.543377, 36.143917, 22.86531 ,
+       28.640314, 18.297665, 21.77447 , 22.796528], dtype=float32)}
+== full: median 10.147s objective 0.08825 success 0.94
+Success rate:  0.9375
+        True,  True,  True,  True,  True,  True,  True]), 'state_dist': array([26.795683, 13.844871, 54.4886  , 55.307285, 21.174744, 30.689062,
+       59.08637 , 38.10374 , 22.706247, 17.062288, 24.456367, 16.34539 ,
+       22.337126, 18.787973, 17.697296, 21.619305], dtype=float32)}
+== few150: median 4.993s objective 0.08488 success 0.94
+Success rate:  0.8125
+        True,  True,  True, False, False,  True,  True]), 'state_dist': array([16.761927, 67.350136, 72.1677  , 34.636574, 57.665703, 13.283399,
+       29.961153, 44.94612 , 18.733112, 25.535942, 44.07085 , 31.050814,
+       62.788013, 37.564457, 16.086699, 29.756922], dtype=float32)}
+== few100: median 3.301s objective 0.10350 success 0.81
+Success rate:  0.6875
+       False,  True,  True, False, False,  True,  True]), 'state_dist': array([ 75.46326 ,  25.55968 , 197.20119 ,  49.00433 , 111.99134 ,
+        82.896   ,  33.356075,  70.71119 ,  57.288242,  30.340082,
+        64.98568 ,  30.887379,  29.548859,  59.15839 ,  57.05996 ,
+        73.86246 ], dtype=float32)}
+== few60: median 1.939s objective 0.14123 success 0.69
+Success rate:  0.125
+       False, False, False, False, False, False, False]), 'state_dist': array([ 62.38485 ,  40.90508 , 107.88614 ,  72.96582 ,  74.66649 ,
+        49.21252 ,  26.99277 ,  49.27331 ,  28.992493,  44.774853,
+        56.058643,  58.814907,  99.69812 ,  65.21413 ,  28.00732 ,
+        69.61009 ], dtype=float32)}
+== dv:tok0.25:m45: median 3.568s objective 0.41039 success 0.12
+Success rate:  0.375
+        True, False,  True, False, False,  True, False]), 'state_dist': array([ 64.503006,  13.85657 , 107.382774,  71.04124 ,  63.607674,
+        34.517666,  24.047375,  57.46206 ,  42.470478,  27.36659 ,
+        44.92383 ,  17.082361,  82.6969  ,  66.589455,   9.873507,
+        68.572136], dtype=float32)}
+== dv:tok0.25:m60: median 4.057s objective 0.33199 success 0.38
+Success rate:  0.5
+        True,  True,  True, False, False,  True, False]), 'state_dist': array([ 64.63506 ,  22.544716, 104.975815,  75.5822  ,  57.50083 ,
+        39.74213 ,  25.823664,  18.873755,  31.439001,  20.204952,
+        31.632607,  22.54775 ,  73.84735 ,  55.279495,  15.305598,
+        64.35991 ], dtype=float32)}
+== dv:tok0.25:m90: median 5.052s objective 0.25780 success 0.50
+Success rate:  0.0
+       False, False, False, False, False, False, False]), 'state_dist': array([124.25705 , 117.627014, 212.4172  , 198.79538 , 160.7738  ,
+       157.50064 , 193.83075 , 154.59175 , 154.1613  , 103.7577  ,
+        84.76832 , 134.16188 , 198.23393 , 174.32123 , 131.67027 ,
+       118.916664], dtype=float32)}
+== dv:tok0.125:m45: median 2.452s objective 1.28134 success 0.00
+Success rate:  0.0
+       False, False, False, False, False, False, False]), 'state_dist': array([125.30209 ,  99.42695 , 182.70454 , 187.96027 , 141.8826  ,
+       154.75566 , 141.88847 , 118.016136, 152.78262 , 100.972084,
+        60.268982, 109.095764, 189.54353 , 162.30046 , 132.05272 ,
+       116.54609 ], dtype=float32)}
+== dv:tok0.125:m60: median 2.945s objective 1.06640 success 0.00
+Success rate:  0.0
+       False, False, False, False, False, False, False]), 'state_dist': array([110.10994 ,  92.28965 , 162.04094 , 137.09901 , 133.98079 ,
+       135.58847 , 124.02726 , 100.32377 , 124.12483 ,  90.327385,
+        53.409595,  89.766594, 113.50766 , 105.486725, 117.95743 ,
+       106.223206], dtype=float32)}
+== dv:tok0.125:m90: median 3.940s objective 0.79032 success 0.00
+Success rate:  1.0
+        True,  True,  True,  True,  True,  True,  True]), 'state_dist': array([21.955399, 22.826956, 60.466938, 31.261387, 38.916405, 12.922221,
+       16.83457 , 29.69649 , 20.330076, 15.389429, 47.21458 , 22.01117 ,
+       13.752915, 28.916897, 28.163141, 18.177025], dtype=float32)}
+== dv:ctx1:m45: median 6.400s objective 0.09141 success 1.00
+Success rate:  0.9375
+        True,  True,  True, False,  True,  True,  True]), 'state_dist': array([12.462601, 20.309969, 73.20051 , 26.13103 , 34.80345 , 31.903156,
+       18.010777, 24.427414, 18.341377, 23.050268, 36.837975, 14.65702 ,
+       33.591846, 20.600836, 22.182844, 25.017258], dtype=float32)}
+== dv:ctx1:m60: median 6.859s objective 0.10647 success 0.94
+Success rate:  1.0
+        True,  True,  True,  True,  True,  True,  True]), 'state_dist': array([19.160452, 19.036884, 74.37125 , 29.059364, 34.629276, 36.220634,
+       16.957542, 31.229567, 18.152048, 34.074753, 39.709515, 22.856236,
+       37.36931 , 18.297665, 21.77447 , 22.796528], dtype=float32)}
+== dv:ctx1:m90: median 7.848s objective 0.08888 success 1.00
+Full model (fp16_reuse): 336.5 ms per CEM iteration at N = 300; 16 tasks x 30 iterations.
+| draft | tokens/frame | context | cost vs full | Spearman | recall@30 mean (min) | recall@45 mean (min) | recall@60 mean (min) | recall@90 mean (min) | recall@150 mean (min) |
+|---|---|---|---|---|---|---|---|---|---|
+| tok0.5 | 98 | 3 | 0.43 | 0.319 | 0.112 (0.00) | 0.175 (0.00) | 0.243 (0.00) | 0.396 (0.00) | 0.723 (0.20) |
+| tok0.25 | 49 | 3 | 0.21 | 0.238 | 0.081 (0.00) | 0.130 (0.00) | 0.194 (0.00) | 0.349 (0.00) | 0.699 (0.17) |
+| tok0.125 | 24 | 3 | 0.10 | 0.058 | 0.045 (0.00) | 0.080 (0.00) | 0.128 (0.00) | 0.246 (0.00) | 0.556 (0.13) |
+| ctx1 | 196 | 1 | 0.49 | 0.955 | 0.764 (0.03) | 0.896 (0.03) | 0.945 (0.07) | 0.981 (0.30) | 0.998 (0.67) |
+| tok0.25+ctx1 | 49 | 1 | 0.10 | 0.297 | 0.098 (0.00) | 0.158 (0.00) | 0.225 (0.00) | 0.386 (0.00) | 0.722 (0.07) |
+| plan | median latency (s) | speedup | final objective, full model | paired difference vs full (se) | success | mean state dist |
+|---|---|---|---|---|---|---|
+| full | 10.15 | 1.00x | 0.08825 | +0.00000 (0.00000) | 15/16 | 29.1 |
+| few150 | 4.99 | 2.03x | 0.08488 | -0.00337 (0.00131) | 15/16 | 28.8 |
+| few100 | 3.30 | 3.07x | 0.10350 | +0.01525 (0.00922) | 13/16 | 37.6 |
+| few60 | 1.94 | 5.23x | 0.14123 | +0.05298 (0.01892) | 11/16 | 65.6 |
+| dv:tok0.25:m45 | 3.57 | 2.84x | 0.41039 | +0.32214 (0.03343) | 2/16 | 58.5 |
+| dv:tok0.25:m60 | 4.06 | 2.50x | 0.33199 | +0.24374 (0.04392) | 6/16 | 49.7 |
+| dv:tok0.25:m90 | 5.05 | 2.01x | 0.25780 | +0.16955 (0.03230) | 8/16 | 45.3 |
+| dv:tok0.125:m45 | 2.45 | 4.14x | 1.28134 | +1.19309 (0.11447) | 0/16 | 151.2 |
+| dv:tok0.125:m60 | 2.95 | 3.45x | 1.06640 | +0.97815 (0.10209) | 0/16 | 136.0 |
+| dv:tok0.125:m90 | 3.94 | 2.58x | 0.79032 | +0.70207 (0.06938) | 0/16 | 112.3 |
+| dv:ctx1:m45 | 6.40 | 1.59x | 0.09141 | +0.00317 (0.00386) | 16/16 | 26.8 |
+| dv:ctx1:m60 | 6.86 | 1.48x | 0.10647 | +0.01822 (0.01684) | 15/16 | 27.2 |
+| dv:ctx1:m90 | 7.85 | 1.29x | 0.08888 | +0.00063 (0.00036) | 16/16 | 29.7 |
