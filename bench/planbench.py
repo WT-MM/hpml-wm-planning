@@ -9,6 +9,11 @@ which are applied by patching at run time so every variant plans the same tasks 
   cache           encode the start frame once per plan and expand the latents ("cached encodings" strong baseline)
   cache_sdpa      cache + predictor attention through F.scaled_dot_product_attention (fused kernel, same frame mask)
   cache_sdpa_fp16 cache_sdpa + fp16 autocast inside the world-model rollout (changes numerics)
+  cache_sdpa_tf32 cache_sdpa + TF32 matmul (fp32 storage, 10-bit mantissa in the matmuls)
+  fp16_compile    cache_sdpa_fp16 + torch.compile on the predictor
+  fp16_reuse      cache_sdpa_fp16 + ReusePredict: earlier frames' keys/values cached across rollout steps (exact)
+  fp16_reuse_compile  fp16_reuse + torch.compile on its two step functions
+  cache_sdpa_reuse    fp32 ReusePredict, only to check that the reuse is exact (self-check; not timed by default)
 
 One plan = one task: opt_steps CEM iterations x num_samples candidate action sequences x horizon steps.
 """
@@ -21,12 +26,19 @@ import torch.nn.functional as F
 
 W = Path(os.environ["HPML_W"])  # folder holding dino_wm/, ckpt/outputs/, data/pusht_noise/
 DINO_WM = W / "dino_wm"
-VARIANTS = {  # name -> (cache, sdpa, amp dtype)
-    "official": (False, False, None),
-    "cache": (True, False, None),
-    "cache_sdpa": (True, True, None),
-    "cache_sdpa_fp16": (True, True, torch.float16),
+OPTS = dict(cache=False, sdpa=False, amp=None, tf32=False, compile=False, reuse=False)
+VARIANTS = {  # name -> options that differ from OPTS
+    "official": {},
+    "cache": dict(cache=True),
+    "cache_sdpa": dict(cache=True, sdpa=True),
+    "cache_sdpa_tf32": dict(cache=True, sdpa=True, tf32=True),
+    "cache_sdpa_reuse": dict(cache=True, sdpa=True, reuse=True),
+    "cache_sdpa_fp16": dict(cache=True, sdpa=True, amp=torch.float16),
+    "fp16_compile": dict(cache=True, sdpa=True, amp=torch.float16, compile=True),
+    "fp16_reuse": dict(cache=True, sdpa=True, amp=torch.float16, reuse=True),
+    "fp16_reuse_compile": dict(cache=True, sdpa=True, amp=torch.float16, reuse=True, compile=True),
 }
+DEFAULT = "official,cache,cache_sdpa,cache_sdpa_fp16"
 
 
 # ---------------------------------------------------------------- variants
@@ -42,9 +54,10 @@ def rollout_tail(wm, z, action):
     return wm.separate_emb(z)[0], z
 
 
-def make_cached_rollout(wm, cache):
+def make_cached_rollout(wm, cache, before=lambda: None):
     """rollout() for a planner that passes the same start observation repeated B times: encode one copy, expand."""
     def rollout(obs_0, act):
+        before()
         if "z" not in cache:
             assert torch.equal(obs_0["visual"][0], obs_0["visual"][-1]), "cached rollout needs identical rows"
             cache["z"] = wm.encode_obs({k: v[:1] for k, v in obs_0.items()})
@@ -70,10 +83,69 @@ def sdpa_forward(self, x):
     return self.to_out(out.transpose(1, 2).reshape(B, T, -1))
 
 
+class ReusePredict:
+    """Stands in for VWorldModel.predict inside a rollout and returns only the next frame, (B, 1, P, D): the same
+    numbers up to floating-point reordering, with less work. The predictor's attention is frame-causal, so
+    (1) while the window still starts at frame 0, earlier frames' keys and values do not change between rollout steps:
+        they are cached and only the new frame goes through the layers;
+    (2) once the window slides, every position embedding shifts and nothing is reusable, but the last layer is still
+        only needed for the last frame."""
+    def __init__(self, wm, compile=False):
+        self.pred, self.layers = wm.predictor, list(wm.predictor.transformer.layers)
+        self.grow, self.slide = self._grow, self._slide
+        if compile:
+            self.grow, self.slide = torch.compile(self._grow, dynamic=False), torch.compile(self._slide, dynamic=False)
+        self.reset()
+
+    def reset(self):  # start of a rollout
+        self.kv, self.done = None, 0
+
+    @staticmethod
+    def _qkv(attn, x):
+        B, T, _ = x.shape
+        return [t.view(B, T, attn.heads, -1).transpose(1, 2) for t in attn.to_qkv(attn.norm(x)).chunk(3, dim=-1)]
+
+    @staticmethod
+    def _layer(attn, ff, x, q, k, v, mask):  # x: the query tokens' residual stream
+        o = F.scaled_dot_product_attention(q, k, v, attn_mask=mask, dropout_p=attn.dropout.p if attn.training else 0.0)
+        x = attn.to_out(o.transpose(1, 2).reshape(x.shape[0], x.shape[1], -1)) + x
+        return ff(x) + x
+
+    def _grow(self, x, kv, mask):  # x: tokens of the new frame(s); kv: per-layer (k, v) of the earlier frames, or None
+        new = []
+        for i, (attn, ff) in enumerate(self.layers):
+            q, k, v = self._qkv(attn, x)
+            if kv is not None:
+                k, v = torch.cat([kv[i][0], k], 2), torch.cat([kv[i][1], v], 2)
+            new.append((k, v)); x = self._layer(attn, ff, x, q, k, v, mask)
+        return self.pred.transformer.norm(x), new
+
+    def _slide(self, x, mask, P):  # x: the whole window
+        for attn, ff in self.layers[:-1]:
+            q, k, v = self._qkv(attn, x); x = self._layer(attn, ff, x, q, k, v, mask)
+        attn, ff = self.layers[-1]
+        q, k, v = self._qkv(attn, x)
+        return self.pred.transformer.norm(self._layer(attn, ff, x[:, -P:], q[:, :, -P:], k, v, None))
+
+    def __call__(self, zw):  # zw = z[:, -num_hist:], what VWorldModel.predict receives
+        T, P = zw.shape[1], zw.shape[2]; pos, bias = self.pred.pos_embedding, self.layers[0][0].bias
+        if T > self.done:  # the window still starts at frame 0: frames [done, T) are new
+            x = self.pred.dropout(zw[:, self.done:].flatten(1, 2) + pos[:, self.done * P:T * P])
+            mask = None if T - self.done == 1 else bias[:, :, self.done * P:T * P, :T * P] != 0
+            out, self.kv = self.grow(x, self.kv, mask); self.done = T
+        else:
+            self.kv = None
+            out = self.slide(self.pred.dropout(zw.flatten(1, 2) + pos[:, :T * P]), bias[:, :, :T * P, :T * P] != 0, P)
+        return out[:, None, -P:]
+
+
 class Variant:
     """Context manager that applies a variant to the world model for the duration of a plan."""
+    _reuse = {}  # compile flag -> ReusePredict, kept so that compiled code is reused across Variant instances
+
     def __init__(self, wm, name):
-        self.wm, (self.cache, self.sdpa, self.amp) = wm, VARIANTS[name]
+        self.wm, self.o = wm, {**OPTS, **VARIANTS[name]}
+        self.cache, self.sdpa, self.amp = self.o["cache"], self.o["sdpa"], self.o["amp"]
         self.z_cache = {}
 
     def new_plan(self):
@@ -84,7 +156,22 @@ class Variant:
         self._attn_fwd = vit.Attention.forward
         if self.sdpa:
             vit.Attention.forward = sdpa_forward
-        inner = make_cached_rollout(self.wm, self.z_cache) if self.cache else type(self.wm).rollout.__get__(self.wm)
+        self._tf32 = torch.backends.cuda.matmul.allow_tf32
+        if self.o["tf32"]:
+            torch.backends.cuda.matmul.allow_tf32 = True
+        before = lambda: None
+        if self.o["reuse"]:
+            assert self.cache and self.sdpa, "reuse builds on cache + sdpa"
+            c = self.o["compile"]
+            if c not in Variant._reuse:
+                Variant._reuse[c] = ReusePredict(self.wm, c)
+            self.wm.predict = Variant._reuse[c]; before = self.wm.predict.reset  # instance attribute shadows the method
+        elif self.o["compile"]:
+            self._pred = self.wm.predictor
+            if not hasattr(self._pred, "_compiled"):
+                self._pred._compiled = [torch.compile(self._pred, dynamic=False)]  # in a list: not a submodule
+            self.wm.predictor = self._pred._compiled[0]
+        inner = make_cached_rollout(self.wm, self.z_cache, before) if self.cache else type(self.wm).rollout.__get__(self.wm)
         if self.amp is not None:
             def rollout(obs_0, act, _inner=inner):
                 with torch.autocast("cuda", dtype=self.amp):
@@ -98,7 +185,12 @@ class Variant:
     def __exit__(self, *exc):
         import models.vit as vit
         vit.Attention.forward = self._attn_fwd
+        torch.backends.cuda.matmul.allow_tf32 = self._tf32
         del self.wm.rollout
+        if self.o["reuse"]:
+            del self.wm.predict
+        elif self.o["compile"]:
+            self.wm.predictor = self._pred
 
 
 # ---------------------------------------------------------------- setup (official code paths)
@@ -179,7 +271,8 @@ def meta(args, S, device):
         "torch": torch.__version__, "cuda": torch.version.cuda, "cudnn": torch.backends.cudnn.version(),
         "python": sys.version.split()[0], "dtype": "float32 (fp16 autocast in *_fp16 variants)",
         "tf32_matmul": torch.backends.cuda.matmul.allow_tf32, "tf32_cudnn": torch.backends.cudnn.allow_tf32,
-        "cudnn_benchmark": torch.backends.cudnn.benchmark, "backend": "PyTorch eager, no torch.compile",
+        "cudnn_benchmark": torch.backends.cudnn.benchmark, "backend": "PyTorch eager (torch.compile only in *_compile variants)",
+        "variant_options": {n: {k: str(v) for k, v in VARIANTS[n].items()} for n in args.variants.split(",")},
         "model": f"DINO-WM {args.model_name} (model_{args.model_epoch}.pth), encoder {sel(cfg, 'encoder.name')}, "
                  f"predictor ViT depth {sel(cfg, 'predictor.depth')} heads {sel(cfg, 'predictor.heads')}",
         "params_predictor": sum(p.numel() for p in wm.predictor.parameters()),
@@ -247,11 +340,13 @@ def run_variant(S, name, args, device, out):
         res["peak_mem_reserved_mb"] = torch.cuda.max_memory_reserved(device) / 2**20 if cuda else 0.0
         # phase breakdown: separate instrumented pass (synchronising timers perturb end-to-end latency)
         phases, planner = {}, S["planner"]
-        orig = (wm.encode_obs, wm.predict, planner.objective_fn)
+        orig, own_predict = (wm.encode_obs, wm.predict, planner.objective_fn), "predict" in wm.__dict__
         wm.encode_obs, wm.predict = timed(orig[0], phases, "encode_obs", device), timed(orig[1], phases, "predict", device)
         planner.objective_fn = timed(orig[2], phases, "objective", device)
         tot = sum(plan_task(S, var, i, args.seed, device)[0] for i in range(min(args.phase_tasks, n)))
         del wm.encode_obs, wm.predict
+        if own_predict:  # a reuse variant's own predict
+            wm.predict = orig[1]
         planner.objective_fn = orig[2]
         phases["other(sampling,topk,preprocess,act-encode)"] = tot - sum(phases.values())
         res["phase_seconds_per_plan"] = {k: v / min(args.phase_tasks, n) for k, v in phases.items()}
@@ -313,10 +408,15 @@ def selfcheck(S, args, device):
         halves = [wm.rollout({k: v[sl] for k, v in obs.items()}, act[sl])[0] for sl in (slice(0, h), slice(h, K))]
         out["official_rerun"] = row(wm.rollout(obs, act)[0])
         out["official_two_half_batches"] = row({k: torch.cat([x[k] for x in halves]) for k in ref})
-        for name in VARIANTS:
-            if name != "official":
-                with Variant(wm, name):
-                    out[name] = row(wm.rollout(obs, act)[0])
+        got = {}  # compile variants only when asked for (compiling takes minutes)
+        for name in [n for n in VARIANTS if n != "official" and (not VARIANTS[n].get("compile") or n in args.variants.split(","))]:
+            with Variant(wm, name):
+                sync(device); t0 = time.perf_counter()
+                g = wm.rollout(obs, act)[0]; sync(device); first = time.perf_counter() - t0  # includes any compilation
+                got[name] = g["visual"]; out[name] = {**row(g), "first_rollout_s": first}
+            parent = "cache_sdpa_fp16" if VARIANTS[name].get("amp") else "cache_sdpa"  # the same computation, plain
+            if name not in ("cache", parent):
+                out[name].update(parent=parent, max_abs_diff_parent=(got[name] - got[parent]).abs().max().item())
     for m, t in was.items():
         m.training = t
     floor = max(1e-3, 3 * out["official_two_half_batches"]["max_abs_diff"])
@@ -348,7 +448,7 @@ def scaling(S, args, device):
     wm, pl = S["wm"], S["planner"]
     o0 = move_to_device(pl.preprocessor.transform_obs({k: v[:1] for k, v in S["obs_0"].items()}), device)
     rows = []
-    for name in args.variants.split(","):
+    for name in (args.scaling_variants or args.variants).split(","):
         with Variant(wm, name) as var:
             for K in [int(k) for k in args.scaling_k.split(",")]:
                 obs = {k: v.expand(K, *v.shape[1:]).contiguous() for k, v in o0.items()}
@@ -375,7 +475,8 @@ def scaling(S, args, device):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--out", required=True); ap.add_argument("--variants", default=",".join(VARIANTS))
+    ap.add_argument("--out", required=True); ap.add_argument("--variants", default=DEFAULT)
+    ap.add_argument("--scaling-variants", default=None, help="default: --variants")
     ap.add_argument("--model-name", default="pusht"); ap.add_argument("--model-epoch", default="latest")
     ap.add_argument("--n-tasks", type=int, default=50); ap.add_argument("--goal-H", type=int, default=5)
     ap.add_argument("--num-samples", type=int, default=300); ap.add_argument("--topk", type=int, default=30)

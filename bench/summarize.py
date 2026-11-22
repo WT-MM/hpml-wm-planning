@@ -90,6 +90,11 @@ for k, d in R["selfcheck"].items():
     if isinstance(d, dict):
         print(f"| {k} | {d['max_abs_diff']:.1e} | {d['mean_abs_diff']:.1e} | {d['loss_max_abs_diff']:.1e} ({d['loss_spread']:.2f}) | {d['topk_overlap']:.2f} | {d['best_candidate_same']} |")
 
+par = {k: d for k, d in R["selfcheck"].items() if isinstance(d, dict) and "parent" in d}
+if par:
+    print("\nAgainst the same computation without the extra step (max abs feature diff): "
+          + "; ".join(f"{k} vs {d['parent']} {d['max_abs_diff_parent']:.1e}" for k, d in par.items()) + ".")
+
 if R.get("scaling"):
     rows = [r for r in R["scaling"] if not r.get("oom")]; names = list(dict.fromkeys(r["variant"] for r in rows))
     Ks = sorted({r["K"] for r in rows}); get = {(r["variant"], r["K"]): r for r in rows}
