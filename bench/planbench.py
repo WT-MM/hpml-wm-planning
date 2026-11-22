@@ -335,8 +335,8 @@ def profile(S, name, args, device, out):
     ka = p.key_averages()
     dev = lambda e: getattr(e, "self_device_time_total", getattr(e, "self_cuda_time_total", 0))
     total = sum(dev(e) for e in ka) or 1
-    rows = sorted(({"op": e.key, "self_gpu_ms": dev(e) / 1e3, "self_gpu_frac": dev(e) / total, "calls": e.count,
-                    "self_cpu_ms": e.self_cpu_time_total / 1e3} for e in ka), key=lambda r: -r["self_gpu_ms"])[:25]
+    rows = sorted(({"op": e.key[:120], "self_gpu_ms": dev(e) / 1e3, "self_gpu_frac": dev(e) / total, "calls": e.count,
+                    "self_cpu_ms": e.self_cpu_time_total / 1e3} for e in ka), key=lambda r: -r["self_gpu_ms"])[:60]
     (out / f"profile_{name}.txt").write_text(ka.table(sort_by="self_cuda_time_total", row_limit=30, max_name_column_width=60))
     return rows
 

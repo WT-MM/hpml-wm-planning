@@ -12,6 +12,15 @@ rng = np.random.default_rng(0)
 gpu = M["gpu"].replace("NVIDIA GeForce ", "")
 
 
+def kind(op):
+    o = op.lower()
+    for key, label in (("fmha", "fused attention kernel"), ("gemm", "GEMM (linear layers, attention matmul)"), ("softmax", "softmax"),
+                       ("memcpy", "memcpy"), ("elementwise", "elementwise"), ("layer_norm", "layer norm"), ("gelu", "GELU")):
+        if key in o:
+            return label
+    return "other"
+
+
 def paired_speedup(a, b):
     """Speedup of b over a: ratio of mean latencies, 95% CI by bootstrap over the paired tasks."""
     a, b = np.array(a), np.array(b); idx = rng.integers(0, len(a), (10000, len(a)))
@@ -48,8 +57,14 @@ if V:
         d = np.abs(np.array(v["actions"]) - np.array(base["actions"])).max()
         print(f"- {name}: max |action - official| {d:.2e}; mean final CEM loss {np.mean([t[-1] for t in v['cem_loss_trace']]):.4f}; "
               f"mean state distance to goal {np.mean(v['state_dist']):.1f}")
-    for name, rows in R.get("profile_top_ops", {}).items():
-        print(f"\nTop GPU ops, {name} (one plan): " + "; ".join(f"{r['op']} {100 * r['self_gpu_frac']:.0f}%" for r in rows[:6]))
+    if R.get("profile_top_ops"):
+        print("\nGPU kernel time by kind, PyTorch Profiler over one plan (share of the kernel rows among the profiler's top rows):")
+        for name, rows in R["profile_top_ops"].items():
+            k = [r for r in rows if not r["op"].startswith(("aten::", "cuda", "cudaLaunch"))]  # kernels only: aten:: rows repeat their kernels' time
+            tot = sum(r["self_gpu_ms"] for r in k) or 1; g = {}
+            for r in k:
+                g[kind(r["op"])] = g.get(kind(r["op"]), 0) + r["self_gpu_ms"] / tot
+            print(f"- {name}: " + ", ".join(f"{a} {100 * b:.0f}%" for a, b in sorted(g.items(), key=lambda x: -x[1])) + f"  ({tot / 1e3:.2f} s of kernels)")
     ours = str(M.get("gpu_index_visible"))  # compute-app lists are empty inside the sandbox's pid namespace: judge by the other card
     busy = sorted({n for n, v in V.items() for st in (v["gpu_state_start"], v["gpu_state_end"]) for row in st["gpus"]
                    for i, util, mem in [[x.strip() for x in row.split(",")]] if i != ours and (float(util) > 10 or float(mem) > 100)})
