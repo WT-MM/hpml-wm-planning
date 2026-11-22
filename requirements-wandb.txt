@@ -1,0 +1,2 @@
+# Import-only dependency; matches the benchmark's recorded environment.
+wandb==0.31.2
