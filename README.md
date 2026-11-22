@@ -36,7 +36,7 @@ One RTX 5090, fp32 unless named, 16 paired tasks, warm-up 1 plan, seed 99 (`resu
 
 The predictor rollout is 95.5% of an official plan and its cost is linear in the number of candidates.
 Full tables (phase split, profiler kernels, rollout cost vs candidates, equivalence checks):
-`results/mid_seed99/summary.md`. The report draft is `docs/midpoint_draft.md`.
+`results/mid_seed99/summary.md`. The mid-point report is `docs/HPML_Midpoint_Report_Team28.pptx` (the course template, filled); its text is in `docs/midpoint_draft.md`.
 
 ![latency and phase split](results/mid_seed99/summary.png)
 
