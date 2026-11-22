@@ -404,6 +404,7 @@ def main():
         v = result["variants"][name]
         print(f"== {name}: median {v['latency_median_s']:.3f}s p95 {v['latency_p95_s']:.3f}s success "
               f"{v['success_rate']:.2f} peak {v['peak_mem_alloc_mb']:.0f}MB phases {v['phase_fraction']}", flush=True)
+    (out / "results.json").write_text(json.dumps(result))
     S["env"].close()
 
 
