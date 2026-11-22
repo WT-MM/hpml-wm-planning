@@ -1,7 +1,7 @@
 # Mid-Point Report draft (content for HPML_Midpoint_Report_Template.pptx)
 
-Status of this draft: every section is written except the GPU numbers, marked **[GPU RUN PENDING]**. They come from
-`results/mid_seed99/summary.md` once the benchmark has run on the RTX 5090.
+Status of this draft: all numbers are from the run in `results/mid_seed99/` (one RTX 5090, 2026-11-22 UTC); the full
+tables are in `results/mid_seed99/summary.md`. Still open: teammates' UNIs and the tracking-dashboard link.
 
 ## Title & Team
 
@@ -49,22 +49,64 @@ Experiment tracking dashboard: **[TO SET UP: W&B project or hosted MLflow]**.
 ## Current Progress
 
 **Baseline & experimental setup.** The official DINO-WM code (commit `0a9492f`, unmodified) with the released PushT
-checkpoint runs end to end in our harness: 50 tasks sampled from the validation split as in the official
+checkpoint runs end to end in our harness: 16 tasks sampled from the validation split as in the official
 `goal_source='dset'` protocol, open-loop CEM plan, execution in the simulator. Sanity rows: the dataset's own actions
 reach the goal on every task, zero actions on none. Every metric is reported with: RTX 5090, driver 580.142,
 PyTorch 2.15.0 + CUDA 13.2, eager mode, fp32 (fp16 autocast only where named), TF32 matmul off, batch = 300
-candidates, context 3 frames x 196 tokens, warm-up = 1 discarded plan, 1 timed plan per task over 50 paired tasks,
-seed 99. Papers: DINO-WM (arXiv 2411.04983), DINOv2, CEM / MPC planning, speculative decoding (the analogy).
+candidates, context 3 frames x 196 tokens, warm-up = 1 discarded plan, 1 timed plan per task over 16 paired tasks,
+seed 99, `time.perf_counter` around the planner call with `torch.cuda.synchronize` before and after, the other GPU
+idle. (16 tasks rather than the planned 50: one official plan takes 71.6 s and the GPU slot was shared. Latency varies
+by 0.06% across tasks, so timing is tight; the success rate is coarse.) Papers: DINO-WM (arXiv 2411.04983), DINOv2, CEM / MPC planning, speculative decoding (the analogy).
 
-**[GPU RUN PENDING]** latency table (median, mean ± sd, p95, ms per CEM iteration, candidates/s, peak memory, success).
+| Variant | Median plan (s) | Mean ± sd (s) | p95 (s) | ms / CEM iteration | Candidates/s | Peak GPU memory (MB) | Speedup vs official [95% CI] | Success |
+|---|---|---|---|---|---|---|---|---|
+| `official` (DINO-WM as released) | 71.61 | 71.61 ± 0.04 | 71.67 | 2387 | 126 | 18507 | 1.00x | 16/16 |
+| `cache` (start frame encoded once) | 68.43 | 68.43 ± 0.05 | 68.50 | 2281 | 132 | 18598 | 1.05x [1.05, 1.05] | 16/16 |
+| `cache_sdpa` (+ fused attention) | 40.21 | 40.21 ± 0.02 | 40.24 | 1340 | 224 | 5217 | 1.78x [1.78, 1.78] | 16/16 |
+| `cache_sdpa_fp16` (+ fp16 autocast) | 14.36 | 14.35 ± 0.03 | 14.38 | 479 | 627 | 3740 | 4.99x [4.98, 4.99] | 16/16 |
 
-**Profiling / baseline analysis.** **[GPU RUN PENDING]** phase split (encode / predictor / objective / other) and top
-GPU ops; rollout cost against the number of candidates K (this is T_F(K) in the speedup condition).
-CPU dry run (functional check only, not a result): the predictor is 96-99% of planning time.
+Speedup is the ratio of mean latencies over the paired tasks, 95% CI by bootstrap over tasks. Figure:
+`results/mid_seed99/summary.png`.
 
-**First optimization / implementation status.** Implemented and verified: cached start-frame encoding, fused
-attention, fp16 autocast. On CPU the optimized rollouts match the official rollout to 1e-5 and CEM picks identical
-elites. **[GPU RUN PENDING]** paired speedups with 95% confidence intervals and success at equal task set.
+**Profiling / baseline analysis.**
+- Phase split of one official plan (instrumented pass): predictor rollout 95.5%, observation encoding 4.3%, CEM
+  sampling / top-k / preprocessing 0.2%, objective < 0.1%. The planner is the predictor; nothing else matters yet.
+- PyTorch Profiler, GPU kernel time of one official plan (71.2 s of kernels): GEMM 59% (linear layers and the
+  attention matmuls), elementwise 24%, memcpy 8%, softmax 8%, layer norm 1%. With fused attention (40.3 s of
+  kernels): GEMM 60%, fused attention kernel 33%, elementwise 5%; the memcpy and softmax rows disappear.
+- Memory: the hand-written attention materializes a 300 x 16 x 588 x 588 fp32 attention matrix (6.6 GB) per layer;
+  fused attention does not, so peak memory drops from 18.5 GB to 5.2 GB.
+- Rollout cost T_F(K) of one CEM iteration against the number of candidates K (warm-up 3 calls, median of 20 calls):
+
+| K | `official` ms (peak MB) | `cache` | `cache_sdpa` | `cache_sdpa_fp16` |
+|---|---|---|---|---|
+| 1 | 10.3 (308) | 8.9 (309) | 8.4 (264) | 4.7 (342) |
+| 16 | 122.5 (1202) | 117.4 (1207) | 71.4 (463) | 24.7 (494) |
+| 64 | 505.6 (4053) | 487.4 (4073) | 288.0 (1195) | 100.1 (966) |
+| 300 | 2384.7 (18071) | 2283.6 (18162) | 1343.0 (4781) | 479.0 (3347) |
+
+  Cost is linear in K from K = 8 up (official: 7.7 ms per candidate at K = 16, 7.9 at K = 300), so one 5090 is
+  already saturated by a handful of candidates and batching buys nothing more. Lower latency has to come from a
+  cheaper per-candidate computation, which is the premise of the reference-conditioned rollout. Figure:
+  `results/mid_seed99/scaling.png`.
+
+**First optimization / implementation status.** Implemented and measured: cached start-frame encoding (1.05x), fused
+attention (1.78x, 3.5x less memory), fp16 autocast (4.99x, 4.9x less memory), all at 16/16 success on the same tasks.
+- Correctness against the official rollout on identical inputs (one task, 300 candidates): fp32 variants differ by at
+  most 0.048 in a feature (mean 4.3e-4), which moves the planning objective by 5.3e-4 against a spread of 1.37 across
+  candidates; fp16 by at most 0.33 (mean 2.2e-3), objective 4.2e-3. In all cases CEM selects the same 30 elites and
+  the same best candidate.
+- Over 30 CEM iterations those small differences compound, so the final plans are not identical to the official
+  ones (mean absolute action difference 0.09 for fp32, 0.27 for fp16, normalized action units). Plan quality is the
+  same: mean final CEM loss 0.0880 / 0.0880 / 0.0876 and mean final state distance to the goal 25.5 / 26.0 / 27.1
+  (official / fp32 optimized / fp16). `cache` and `cache_sdpa` give bit-identical plans, so fused attention itself
+  changes nothing.
+- Status against the 1.5x target: against the released code the systems optimizations alone exceed it. The project's
+  claim is stricter: the reference-conditioned planner must be 1.5x faster than the optimized full-model baseline
+  (`cache_sdpa`, or `cache_sdpa_fp16`) at the same success. That is not attempted yet. The measured budget for it:
+  with T_F(1) = 8.4 ms and T_F(300) = 1343 ms (fp32), the small predictor G must score 300 candidates in under
+  about 885 ms, i.e. 3.0 ms per candidate against 4.5 ms for the full model; in fp16, under about 315 ms
+  (1.05 ms against 1.6 ms), before any reuse overhead.
 
 ## Future Work
 
@@ -88,5 +130,10 @@ stays optional until the base result is clear (per the proposal feedback).
 - Shared workstation: timing needs an exclusive GPU. Runs start only on an idle card and stop if another job appears.
 - The PushT validation split has only 21 episodes; tasks differ by start offset. Plan: add random-state goals and
   held-out training episodes split by source episode.
-- On GPU the fp32 variants differ from the official rollout by up to ~0.05 in feature space (1e-5 on CPU). The
-  benchmark now measures the backend's own batch-size noise floor next to it. **[GPU RUN PENDING]**
+- On GPU the fp32 variants differ from the official rollout by up to 0.048 in feature space (1e-5 on CPU). The
+  official rollout itself is exactly repeatable, also when the 300 candidates are split into two batches of 150, so
+  this is not run-to-run noise. It enters where the start frame is encoded once at batch size 1 instead of 300; the
+  cause is not isolated yet (suspect: a batch-size-dependent convolution kernel in the patch embedding).
+- Success is saturated (16/16 for every variant) on 16 open-loop tasks, so it cannot show a small quality loss; final
+  CEM loss and state distance are the finer measures for now. fp16 in particular needs the larger closed-loop
+  evaluation before we call it quality-neutral.

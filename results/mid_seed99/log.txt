@@ -1,0 +1,211 @@
+$HPML_W/dino_wm/custom_resolvers.py:4: UserWarning: 
+The version_base parameter is not specified.
+Please specify a compatability version level, or None.
+Will assume defaults for version 1.1
+  @hydra.main(config_path=None)
+Loaded 18685 rollouts
+Loaded 21 rollouts
+Resuming from epoch 2: $HPML_W/ckpt/outputs/pusht/checkpoints/model_latest.pth
+Using cache found in $HPML_W/cache/torch/hub/facebookresearch_dinov2_main
+num_action_repeat: 1
+num_proprio_repeat: 1
+proprio encoder: ProprioceptiveEmbedding(
+  (patch_embed): Conv1d(4, 10, kernel_size=(1,), stride=(1,))
+)
+action encoder: ProprioceptiveEmbedding(
+  (patch_embed): Conv1d(10, 10, kernel_size=(1,), stride=(1,))
+)
+proprio_dim: 10, after repeat: 10
+action_dim: 10, after repeat: 10
+emb_dim: 404
+Model emb_dim:  404
+{
+ "gpu": "NVIDIA GeForce RTX 5090",
+ "gpu_index_visible": "1",
+ "driver": "580.142",
+ "cpu": "AMD Ryzen 9 9950X 16-Core Processor",
+ "torch": "2.15.0+cu132",
+ "cuda": "13.2",
+ "cudnn": 92600,
+ "python": "3.12.15",
+ "dtype": "float32 (fp16 autocast in *_fp16 variants)",
+ "tf32_matmul": false,
+ "tf32_cudnn": true,
+ "cudnn_benchmark": false,
+ "backend": "PyTorch eager, no torch.compile",
+ "model": "DINO-WM pusht (model_latest.pth), encoder dinov2_vits14, predictor ViT depth 6 heads 16",
+ "params_predictor": 20122600,
+ "params_encoder": 22056576,
+ "train_flags_as_loaded": {
+  "encoder": true,
+  "predictor": false,
+  "action_encoder": false,
+  "proprio_encoder": false
+ },
+ "eval_mode_forced": false,
+ "batch_candidates": 300,
+ "cem_opt_steps": 30,
+ "cem_topk": 30,
+ "horizon": 5,
+ "frameskip": 5,
+ "num_hist": 3,
+ "tokens_per_frame": 196,
+ "context_tokens_max": 588,
+ "img_size": 224,
+ "n_tasks": 16,
+ "seed": 99,
+ "warmup_plans": 1,
+ "repetitions": "1 plan per task",
+ "timer": "time.perf_counter around planner.plan with torch.cuda.synchronize before and after",
+ "dino_wm_commit": "0a9492fa12044b852ae9e001cc74604b79c8bb0c",
+ "argv": [
+  "--out",
+  "$HPML_W/runs/mid_seed99",
+  "--n-tasks",
+  "16",
+  "--phase-tasks",
+  "2",
+  "--profile",
+  "--scaling"
+ ]
+}
+selfcheck {"official_rerun": {"max_abs_diff": 0.0, "mean_abs_diff": 0.0, "ref_abs_mean": 1.9284015893936157, "loss_max_abs_diff": 0.0, "loss_spread": 1.3721275329589844, "best_candidate_same": true, "topk_overlap": 1.0}, "official_two_half_batches": {"max_abs_diff": 0.0, "mean_abs_diff": 0.0, "ref_abs_mean": 1.9284015893936157, "loss_max_abs_diff": 0.0, "loss_spread": 1.3721275329589844, "best_candidate_same": true, "topk_overlap": 1.0}, "cache": {"max_abs_diff": 0.048071861267089844, "mean_abs_diff": 0.0004291492223273963, "ref_abs_mean": 1.9284015893936157, "loss_max_abs_diff": 0.0005256533622741699, "loss_spread": 1.3721275329589844, "best_candidate_same": true, "topk_overlap": 1.0}, "cache_sdpa": {"max_abs_diff": 0.04806160926818848, "mean_abs_diff": 0.0004292319354135543, "ref_abs_mean": 1.9284015893936157, "loss_max_abs_diff": 0.0005266070365905762, "loss_spread": 1.3721275329589844, "best_candidate_same": true, "topk_overlap": 1.0}, "cache_sdpa_fp16": {"max_abs_diff": 0.3273501396179199, "mean_abs_diff": 0.002171287778764963, "ref_abs_mean": 1.9284015893936157, "loss_max_abs_diff": 0.004245281219482422, "loss_spread": 1.3721275329589844, "best_candidate_same": true, "topk_overlap": 1.0}, "fp32_within_3x_noise_floor": false}
+Success rate:  1.0
+        True,  True,  True,  True,  True,  True,  True]), 'state_dist': array([0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
+      dtype=float32)}
+Success rate:  0.0
+       False, False, False, False, False, False, False]), 'state_dist': array([ 76.95057, 165.55856, 399.83334, 195.92244, 265.60156, 248.48555,
+       223.92351, 185.0763 , 150.15778, 164.42686, 144.36809, 139.88492,
+       152.31755, 162.51659, 140.99763,  68.28931], dtype=float32)}
+scaling {"variant": "official", "K": 1, "median_ms": 10.284869465976954, "min_ms": 10.24787500500679, "p95_ms": 10.294230398721993, "ms_per_candidate": 10.284869465976954, "peak_mem_alloc_mb": 308.40966796875, "warmup": 3, "reps": 20}
+scaling {"variant": "official", "K": 2, "median_ms": 17.517447005957365, "min_ms": 16.339908819645643, "p95_ms": 17.78358812443912, "ms_per_candidate": 8.758723502978683, "peak_mem_alloc_mb": 370.7041015625, "warmup": 3, "reps": 20}
+scaling {"variant": "official", "K": 4, "median_ms": 32.485803589224815, "min_ms": 32.41171920672059, "p95_ms": 32.53937475383282, "ms_per_candidate": 8.121450897306204, "peak_mem_alloc_mb": 488.6181640625, "warmup": 3, "reps": 20}
+scaling {"variant": "official", "K": 8, "median_ms": 61.3402605522424, "min_ms": 61.27245211973786, "p95_ms": 61.38099378440529, "ms_per_candidate": 7.6675325690303, "peak_mem_alloc_mb": 726.2041015625, "warmup": 3, "reps": 20}
+scaling {"variant": "official", "K": 16, "median_ms": 122.4767779931426, "min_ms": 122.30586493387818, "p95_ms": 122.68148742150515, "ms_per_candidate": 7.654798624571413, "peak_mem_alloc_mb": 1202.1142578125, "warmup": 3, "reps": 20}
+scaling {"variant": "official", "K": 32, "median_ms": 249.64161729440093, "min_ms": 249.3342449888587, "p95_ms": 249.9679300468415, "ms_per_candidate": 7.801300540450029, "peak_mem_alloc_mb": 2153.2158203125, "warmup": 3, "reps": 20}
+scaling {"variant": "official", "K": 64, "median_ms": 505.6070159189403, "min_ms": 504.9111032858491, "p95_ms": 506.02556753437966, "ms_per_candidate": 7.900109623733442, "peak_mem_alloc_mb": 4052.54443359375, "warmup": 3, "reps": 20}
+scaling {"variant": "official", "K": 128, "median_ms": 1011.7262571584433, "min_ms": 1010.6609771028161, "p95_ms": 1013.1691746879369, "ms_per_candidate": 7.9041113840503385, "peak_mem_alloc_mb": 7856.3349609375, "warmup": 3, "reps": 20}
+scaling {"variant": "official", "K": 256, "median_ms": 2034.9786870647222, "min_ms": 2031.6974371671677, "p95_ms": 2040.1122960262, "ms_per_candidate": 7.949135496346571, "peak_mem_alloc_mb": 15458.142578125, "warmup": 3, "reps": 20}
+scaling {"variant": "official", "K": 300, "median_ms": 2384.72243049182, "min_ms": 2379.95425472036, "p95_ms": 2391.6890698717907, "ms_per_candidate": 7.949074768306066, "peak_mem_alloc_mb": 18070.6982421875, "warmup": 3, "reps": 20}
+scaling {"variant": "cache", "K": 1, "median_ms": 8.921676315367222, "min_ms": 8.466701954603195, "p95_ms": 9.240860305726528, "ms_per_candidate": 8.921676315367222, "peak_mem_alloc_mb": 309.00146484375, "warmup": 3, "reps": 20}
+scaling {"variant": "cache", "K": 2, "median_ms": 15.87477745488286, "min_ms": 15.435195993632078, "p95_ms": 16.087158233858645, "ms_per_candidate": 7.93738872744143, "peak_mem_alloc_mb": 371.59814453125, "warmup": 3, "reps": 20}
+scaling {"variant": "cache", "K": 4, "median_ms": 30.076130526140332, "min_ms": 29.982191044837236, "p95_ms": 30.154921137727797, "ms_per_candidate": 7.519032631535083, "peak_mem_alloc_mb": 490.34521484375, "warmup": 3, "reps": 20}
+scaling {"variant": "cache", "K": 8, "median_ms": 57.94441676698625, "min_ms": 57.85935278981924, "p95_ms": 57.993294089101255, "ms_per_candidate": 7.243052095873281, "peak_mem_alloc_mb": 729.15869140625, "warmup": 3, "reps": 20}
+scaling {"variant": "cache", "K": 16, "median_ms": 117.35412036068738, "min_ms": 117.21781082451344, "p95_ms": 117.48695226851851, "ms_per_candidate": 7.334632522542961, "peak_mem_alloc_mb": 1207.2373046875, "warmup": 3, "reps": 20}
+scaling {"variant": "cache", "K": 32, "median_ms": 240.4639369342476, "min_ms": 240.24320021271706, "p95_ms": 240.62501152511686, "ms_per_candidate": 7.514498029195238, "peak_mem_alloc_mb": 2163.17236328125, "warmup": 3, "reps": 20}
+scaling {"variant": "cache", "K": 64, "median_ms": 487.4353895429522, "min_ms": 486.73774115741253, "p95_ms": 488.3743706624955, "ms_per_candidate": 7.616177961608628, "peak_mem_alloc_mb": 4072.8359375, "warmup": 3, "reps": 20}
+scaling {"variant": "cache", "K": 128, "median_ms": 973.9552780520171, "min_ms": 971.8073578551412, "p95_ms": 974.896816839464, "ms_per_candidate": 7.6090256097813835, "peak_mem_alloc_mb": 7894.78515625, "warmup": 3, "reps": 20}
+scaling {"variant": "cache", "K": 256, "median_ms": 1952.725910814479, "min_ms": 1947.5691090337932, "p95_ms": 1954.8178867436945, "ms_per_candidate": 7.627835589119059, "peak_mem_alloc_mb": 15535.44140625, "warmup": 3, "reps": 20}
+scaling {"variant": "cache", "K": 300, "median_ms": 2283.579273847863, "min_ms": 2275.4182051867247, "p95_ms": 2287.9545567557216, "ms_per_candidate": 7.61193091282621, "peak_mem_alloc_mb": 18161.6181640625, "warmup": 3, "reps": 20}
+scaling {"variant": "cache_sdpa", "K": 1, "median_ms": 8.375547593459487, "min_ms": 8.32646293565631, "p95_ms": 8.414758928120136, "ms_per_candidate": 8.375547593459487, "peak_mem_alloc_mb": 264.20458984375, "warmup": 3, "reps": 20}
+scaling {"variant": "cache_sdpa", "K": 2, "median_ms": 13.00851907581091, "min_ms": 12.608692981302738, "p95_ms": 13.165950030088425, "ms_per_candidate": 6.504259537905455, "peak_mem_alloc_mb": 278.00048828125, "warmup": 3, "reps": 20}
+scaling {"variant": "cache_sdpa", "K": 4, "median_ms": 20.519974175840616, "min_ms": 20.26666235178709, "p95_ms": 20.60493240132928, "ms_per_candidate": 5.129993543960154, "peak_mem_alloc_mb": 303.80810546875, "warmup": 3, "reps": 20}
+scaling {"variant": "cache_sdpa", "K": 8, "median_ms": 36.16122901439667, "min_ms": 36.069085355848074, "p95_ms": 36.239297105930746, "ms_per_candidate": 4.520153626799583, "peak_mem_alloc_mb": 355.64306640625, "warmup": 3, "reps": 20}
+scaling {"variant": "cache_sdpa", "K": 16, "median_ms": 71.3633275590837, "min_ms": 71.29953801631927, "p95_ms": 71.44635857548565, "ms_per_candidate": 4.460207972442731, "peak_mem_alloc_mb": 463.4873046875, "warmup": 3, "reps": 20}
+scaling {"variant": "cache_sdpa", "K": 32, "median_ms": 143.8746894709766, "min_ms": 143.73538456857204, "p95_ms": 144.01028528809547, "ms_per_candidate": 4.4960840459680185, "peak_mem_alloc_mb": 706.67236328125, "warmup": 3, "reps": 20}
+scaling {"variant": "cache_sdpa", "K": 64, "median_ms": 287.9928359761834, "min_ms": 287.5257609412074, "p95_ms": 288.28628479968756, "ms_per_candidate": 4.499888062127866, "peak_mem_alloc_mb": 1194.7109375, "warmup": 3, "reps": 20}
+scaling {"variant": "cache_sdpa", "K": 128, "median_ms": 570.3150550834835, "min_ms": 569.0421466715634, "p95_ms": 571.0502889938653, "ms_per_candidate": 4.4555863678397145, "peak_mem_alloc_mb": 2165.78515625, "warmup": 3, "reps": 20}
+scaling {"variant": "cache_sdpa", "K": 256, "median_ms": 1144.275157013908, "min_ms": 1142.9552189074457, "p95_ms": 1146.0211775964126, "ms_per_candidate": 4.469824832085578, "peak_mem_alloc_mb": 4111.94140625, "warmup": 3, "reps": 20}
+scaling {"variant": "cache_sdpa", "K": 300, "median_ms": 1343.0391466245055, "min_ms": 1341.5381559170783, "p95_ms": 1346.357959578745, "ms_per_candidate": 4.476797155415018, "peak_mem_alloc_mb": 4780.8447265625, "warmup": 3, "reps": 20}
+scaling {"variant": "cache_sdpa_fp16", "K": 1, "median_ms": 4.7299114521592855, "min_ms": 4.719036165624857, "p95_ms": 4.742579627782106, "ms_per_candidate": 4.7299114521592855, "peak_mem_alloc_mb": 342.04345703125, "warmup": 3, "reps": 20}
+scaling {"variant": "cache_sdpa_fp16", "K": 2, "median_ms": 5.393330007791519, "min_ms": 5.377789959311485, "p95_ms": 5.416720896027982, "ms_per_candidate": 2.6966650038957596, "peak_mem_alloc_mb": 355.39404296875, "warmup": 3, "reps": 20}
+scaling {"variant": "cache_sdpa_fp16", "K": 4, "median_ms": 7.225822424516082, "min_ms": 7.210104260593653, "p95_ms": 7.24732019007206, "ms_per_candidate": 1.8064556061290205, "peak_mem_alloc_mb": 372.349609375, "warmup": 3, "reps": 20}
+scaling {"variant": "cache_sdpa_fp16", "K": 8, "median_ms": 12.863545445725322, "min_ms": 12.033828068524599, "p95_ms": 12.986517488025129, "ms_per_candidate": 1.6079431807156652, "peak_mem_alloc_mb": 416.35791015625, "warmup": 3, "reps": 20}
+scaling {"variant": "cache_sdpa_fp16", "K": 16, "median_ms": 24.714516010135412, "min_ms": 24.18751595541835, "p95_ms": 24.99376644846052, "ms_per_candidate": 1.5446572506334633, "peak_mem_alloc_mb": 494.44970703125, "warmup": 3, "reps": 20}
+scaling {"variant": "cache_sdpa_fp16", "K": 32, "median_ms": 48.342581605538726, "min_ms": 48.01958380267024, "p95_ms": 48.62921654712409, "ms_per_candidate": 1.5107056751730852, "peak_mem_alloc_mb": 649.93359375, "warmup": 3, "reps": 20}
+scaling {"variant": "cache_sdpa_fp16", "K": 64, "median_ms": 100.07673618383706, "min_ms": 99.91721203550696, "p95_ms": 100.168512808159, "ms_per_candidate": 1.563699002872454, "peak_mem_alloc_mb": 966.48828125, "warmup": 3, "reps": 20}
+scaling {"variant": "cache_sdpa_fp16", "K": 128, "median_ms": 201.97258447296917, "min_ms": 201.7302569001913, "p95_ms": 202.11271734442562, "ms_per_candidate": 1.5779108161950717, "peak_mem_alloc_mb": 1603.40673828125, "warmup": 3, "reps": 20}
+scaling {"variant": "cache_sdpa_fp16", "K": 256, "median_ms": 405.56556009687483, "min_ms": 404.59327306598425, "p95_ms": 406.1345380032435, "ms_per_candidate": 1.5842404691284173, "peak_mem_alloc_mb": 2902.447265625, "warmup": 3, "reps": 20}
+scaling {"variant": "cache_sdpa_fp16", "K": 300, "median_ms": 479.00375793688, "min_ms": 477.95548290014267, "p95_ms": 480.1042617065832, "ms_per_candidate": 1.5966791931229334, "peak_mem_alloc_mb": 3347.09912109375, "warmup": 3, "reps": 20}
+USDT:2026-11-22 00:46:00 2:2 SyncActivityProfilerHandler.cpp:39] profiler_start
+USDT:2026-11-22 00:47:11 2:2 SyncActivityProfilerHandler.cpp:46] profiler_stop
+[official] task   0 plan  71.556s final_cem_loss 0.04509
+[official] task   1 plan  71.573s final_cem_loss 0.06394
+[official] task   2 plan  71.587s final_cem_loss 0.09500
+[official] task   3 plan  71.602s final_cem_loss 0.18146
+[official] task   4 plan  71.614s final_cem_loss 0.11633
+[official] task   5 plan  71.611s final_cem_loss 0.04291
+[official] task   6 plan  71.661s final_cem_loss 0.10042
+[official] task   7 plan  71.579s final_cem_loss 0.07114
+[official] task   8 plan  71.619s final_cem_loss 0.09727
+[official] task   9 plan  71.673s final_cem_loss 0.05429
+[official] task  10 plan  71.655s final_cem_loss 0.08727
+[official] task  11 plan  71.615s final_cem_loss 0.12569
+[official] task  12 plan  71.670s final_cem_loss 0.09844
+[official] task  13 plan  71.662s final_cem_loss 0.10949
+[official] task  14 plan  71.545s final_cem_loss 0.07364
+[official] task  15 plan  71.553s final_cem_loss 0.04504
+Success rate:  1.0
+        True,  True,  True,  True,  True,  True,  True]), 'state_dist': array([11.489388, 16.9737  , 40.961067, 22.219141, 35.4248  , 30.43444 ,
+       17.586285, 32.465958, 24.074839, 19.24965 , 36.775455, 20.138262,
+       36.820663, 22.183102, 24.215712, 17.673473], dtype=float32)}
+== official: median 71.613s p95 71.671s success 1.00 peak 18507MB phases {'encode_obs': 0.04334333764730383, 'predict': 0.954851618625381, 'objective': 7.812141199717998e-05, 'other(sampling,topk,preprocess,act-encode)': 0.0017269223153179834}
+USDT:2026-11-22 01:11:08 2:2 SyncActivityProfilerHandler.cpp:39] profiler_start
+USDT:2026-11-22 01:12:16 2:2 SyncActivityProfilerHandler.cpp:46] profiler_stop
+[cache] task   0 plan  68.420s final_cem_loss 0.04494
+[cache] task   1 plan  68.485s final_cem_loss 0.06406
+[cache] task   2 plan  68.479s final_cem_loss 0.09961
+[cache] task   3 plan  68.418s final_cem_loss 0.18592
+[cache] task   4 plan  68.443s final_cem_loss 0.11869
+[cache] task   5 plan  68.437s final_cem_loss 0.04291
+[cache] task   6 plan  68.381s final_cem_loss 0.10041
+[cache] task   7 plan  68.420s final_cem_loss 0.05899
+[cache] task   8 plan  68.409s final_cem_loss 0.09748
+[cache] task   9 plan  68.404s final_cem_loss 0.05428
+[cache] task  10 plan  68.399s final_cem_loss 0.08819
+[cache] task  11 plan  68.318s final_cem_loss 0.12646
+[cache] task  12 plan  68.451s final_cem_loss 0.09235
+[cache] task  13 plan  68.469s final_cem_loss 0.11569
+[cache] task  14 plan  68.430s final_cem_loss 0.07315
+[cache] task  15 plan  68.532s final_cem_loss 0.04506
+Success rate:  1.0
+        True,  True,  True,  True,  True,  True,  True]), 'state_dist': array([12.466179, 15.842172, 61.540234, 22.671743, 35.247578, 30.434364,
+       12.725103, 37.495636, 20.454859, 19.249584, 36.637085, 20.316473,
+       24.534016, 24.294838, 24.589994, 17.673464], dtype=float32)}
+== cache: median 68.425s p95 68.497s success 1.00 peak 18598MB phases {'encode_obs': 8.568921611655239e-05, 'predict': 0.9980919439776526, 'objective': 8.02662167970316e-05, 'other(sampling,topk,preprocess,act-encode)': 0.0017421005894338475}
+USDT:2026-11-22 01:34:45 2:2 SyncActivityProfilerHandler.cpp:39] profiler_start
+USDT:2026-11-22 01:35:26 2:2 SyncActivityProfilerHandler.cpp:46] profiler_stop
+[cache_sdpa] task   0 plan  40.137s final_cem_loss 0.04494
+[cache_sdpa] task   1 plan  40.183s final_cem_loss 0.06406
+[cache_sdpa] task   2 plan  40.222s final_cem_loss 0.09961
+[cache_sdpa] task   3 plan  40.240s final_cem_loss 0.18592
+[cache_sdpa] task   4 plan  40.238s final_cem_loss 0.11869
+[cache_sdpa] task   5 plan  40.215s final_cem_loss 0.04291
+[cache_sdpa] task   6 plan  40.211s final_cem_loss 0.10041
+[cache_sdpa] task   7 plan  40.195s final_cem_loss 0.05899
+[cache_sdpa] task   8 plan  40.191s final_cem_loss 0.09748
+[cache_sdpa] task   9 plan  40.196s final_cem_loss 0.05428
+[cache_sdpa] task  10 plan  40.211s final_cem_loss 0.08819
+[cache_sdpa] task  11 plan  40.218s final_cem_loss 0.12646
+[cache_sdpa] task  12 plan  40.228s final_cem_loss 0.09235
+[cache_sdpa] task  13 plan  40.201s final_cem_loss 0.11569
+[cache_sdpa] task  14 plan  40.198s final_cem_loss 0.07315
+[cache_sdpa] task  15 plan  40.199s final_cem_loss 0.04506
+Success rate:  1.0
+        True,  True,  True,  True,  True,  True,  True]), 'state_dist': array([12.466179, 15.842172, 61.540234, 22.671743, 35.247578, 30.434364,
+       12.725103, 37.495636, 20.454859, 19.249584, 36.637085, 20.316473,
+       24.534016, 24.294838, 24.589994, 17.673464], dtype=float32)}
+== cache_sdpa: median 40.206s p95 40.238s success 1.00 peak 5217MB phases {'encode_obs': 0.00011043111867330724, 'predict': 0.9968418616203057, 'objective': 0.00013552688385831956, 'other(sampling,topk,preprocess,act-encode)': 0.0029121803771625736}
+USDT:2026-11-22 01:48:30 2:2 SyncActivityProfilerHandler.cpp:39] profiler_start
+USDT:2026-11-22 01:48:45 2:2 SyncActivityProfilerHandler.cpp:46] profiler_stop
+[cache_sdpa_fp16] task   0 plan  14.310s final_cem_loss 0.04514
+[cache_sdpa_fp16] task   1 plan  14.306s final_cem_loss 0.06486
+[cache_sdpa_fp16] task   2 plan  14.321s final_cem_loss 0.10009
+[cache_sdpa_fp16] task   3 plan  14.329s final_cem_loss 0.18339
+[cache_sdpa_fp16] task   4 plan  14.338s final_cem_loss 0.11724
+[cache_sdpa_fp16] task   5 plan  14.347s final_cem_loss 0.04646
+[cache_sdpa_fp16] task   6 plan  14.351s final_cem_loss 0.09977
+[cache_sdpa_fp16] task   7 plan  14.356s final_cem_loss 0.06174
+[cache_sdpa_fp16] task   8 plan  14.363s final_cem_loss 0.09637
+[cache_sdpa_fp16] task   9 plan  14.368s final_cem_loss 0.05677
+[cache_sdpa_fp16] task  10 plan  14.374s final_cem_loss 0.08855
+[cache_sdpa_fp16] task  11 plan  14.378s final_cem_loss 0.12056
+[cache_sdpa_fp16] task  12 plan  14.380s final_cem_loss 0.11108
+[cache_sdpa_fp16] task  13 plan  14.369s final_cem_loss 0.08979
+[cache_sdpa_fp16] task  14 plan  14.380s final_cem_loss 0.07514
+[cache_sdpa_fp16] task  15 plan  14.389s final_cem_loss 0.04419
+Success rate:  1.0
+        True,  True,  True,  True,  True,  True,  True]), 'state_dist': array([17.539114, 14.514598, 63.325523, 30.917162, 35.37209 , 19.318945,
+       18.359648, 20.942665, 17.990303, 33.543373, 36.143925, 22.865309,
+       34.46112 , 20.52257 , 28.209356, 18.910294], dtype=float32)}
+== cache_sdpa_fp16: median 14.359s p95 14.382s success 1.00 peak 3740MB phases {'encode_obs': 0.00031502187460842466, 'predict': 0.9912718389660148, 'objective': 0.000374558790562492, 'other(sampling,topk,preprocess,act-encode)': 0.008038580368814269}

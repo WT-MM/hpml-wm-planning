@@ -25,7 +25,22 @@ Every variant plans the same tasks with the same candidate noise, on the same GP
 
 ## Results
 
-See `results/` (one folder per run: `results.json`, `summary.md`, `summary.png`, profiler tables, rollout images).
+One RTX 5090, fp32 unless named, 16 paired tasks, warm-up 1 plan, seed 99 (`results/mid_seed99/`):
+
+| variant | median plan (s) | peak GPU memory (MB) | speedup vs official [95% CI] | success |
+|---|---|---|---|---|
+| `official` | 71.61 | 18507 | 1.00x | 16/16 |
+| `cache` | 68.43 | 18598 | 1.05x [1.05, 1.05] | 16/16 |
+| `cache_sdpa` | 40.21 | 5217 | 1.78x [1.78, 1.78] | 16/16 |
+| `cache_sdpa_fp16` | 14.36 | 3740 | 4.99x [4.98, 4.99] | 16/16 |
+
+The predictor rollout is 95.5% of an official plan and its cost is linear in the number of candidates.
+Full tables (phase split, profiler kernels, rollout cost vs candidates, equivalence checks):
+`results/mid_seed99/summary.md`. The report draft is `docs/midpoint_draft.md`.
+
+![latency and phase split](results/mid_seed99/summary.png)
+
+Each run folder under `results/` holds `results.json`, `summary.md`, figures, profiler tables and rollout images.
 
 ## Reproduce
 
@@ -38,7 +53,7 @@ Needs an NVIDIA GPU, Python 3.12, and the packages in `requirements.txt` (exact 
 
 ```bash
 HPML_W=/path/to/folder DATASET_DIR=$HPML_W/data TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD=1 SDL_VIDEODRIVER=dummy \
-  python /path/to/bench/planbench.py --out runs/mid_seed99 --n-tasks 50 --profile
+  python /path/to/bench/planbench.py --out runs/mid_seed99 --n-tasks 16 --phase-tasks 2 --profile --scaling
 python bench/summarize.py runs/mid_seed99/results.json
 ```
 
