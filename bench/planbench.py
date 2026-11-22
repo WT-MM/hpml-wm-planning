@@ -340,7 +340,7 @@ def run_variant(S, name, args, device, out):
             lat.append(dt); mus.append(mu); losses.append(ls)
             print(f"[{name}] task {i:3d} plan {dt:7.3f}s final_cem_loss {ls[-1]:.5f}", flush=True)
         cuda = device.type == "cuda"
-        res["peak_mem_alloc_mb"] = torch.cuda.max_memory_allocated(device) / 2**20 if cuda else 0.0
+        res["peak_mem_alloc_mb"] = torch.cuda.max_memory_allocated(device) / 2**20 if cuda else 0.0  # MiB, despite the key
         res["peak_mem_reserved_mb"] = torch.cuda.max_memory_reserved(device) / 2**20 if cuda else 0.0
         # phase breakdown: separate instrumented pass (synchronising timers perturb end-to-end latency)
         phases, planner = {}, S["planner"]
@@ -508,7 +508,7 @@ def main():
         (out / "results.json").write_text(json.dumps(result))
         v = result["variants"][name]
         print(f"== {name}: median {v['latency_median_s']:.3f}s p95 {v['latency_p95_s']:.3f}s success "
-              f"{v['success_rate']:.2f} peak {v['peak_mem_alloc_mb']:.0f}MB phases {v['phase_fraction']}", flush=True)
+              f"{v['success_rate']:.2f} peak {v['peak_mem_alloc_mb']:.0f}MiB phases {v['phase_fraction']}", flush=True)
     (out / "results.json").write_text(json.dumps(result))
     S["env"].close()
 

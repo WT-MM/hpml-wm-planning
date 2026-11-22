@@ -4,7 +4,7 @@ Two processes on the same card, same tasks and noise: fp16_compile, fp16_reuse_c
 torch.compile cold start (first rollout call, not part of any plan latency): fp16_compile 11.8 s, fp16_reuse_compile 9.3 s.
 Workload: CEM 30 iterations x 300 candidates (batch), horizon 5 (frameskip 5), top-30; 16 paired tasks, seed 99; warm-up 1 plan(s) discarded; 1 plan per task; time.perf_counter around planner.plan with torch.cuda.synchronize before and after.
 
-| variant | median plan (s) | mean ± sd (s) | p95 (s) | ms / CEM iter | candidates/s | peak GPU mem (MB) | speedup vs official [95% CI] | success | same outcome as official |
+| variant | median plan (s) | mean ± sd (s) | p95 (s) | ms / CEM iter | candidates/s | peak GPU mem (MiB) | speedup vs official [95% CI] | success | same outcome as official |
 |---|---|---|---|---|---|---|---|---|---|
 | official | 71.36 | 71.35 ± 0.05 | 71.41 | 2379 | 126 | 18508 | 1.00x [1.00, 1.00] | 1.00 (16/16) | 1.00 |
 | cache | 68.27 | 68.26 ± 0.06 | 68.32 | 2276 | 132 | 18599 | 1.05x [1.05, 1.05] | 1.00 (16/16) | 1.00 |
@@ -66,7 +66,7 @@ Rollout vs the official rollout on identical inputs (one task, all candidates):
 
 Against the same computation without the extra step (max abs feature diff): cache_sdpa_tf32 vs cache_sdpa 5.9e-02; cache_sdpa_reuse vs cache_sdpa 0.0e+00; fp16_reuse vs cache_sdpa_fp16 5.0e-02; fp16_compile vs cache_sdpa_fp16 4.0e-02; fp16_reuse_compile vs cache_sdpa_fp16 5.5e-02.
 
-One rollout call (one CEM iteration's world-model cost) vs candidates K; horizon 5, warm-up 3 calls discarded, median of 20 calls, ms (peak GPU MB):
+One rollout call (one CEM iteration's world-model cost) vs candidates K; horizon 5, warm-up 3 calls discarded, median of 20 calls, ms (peak GPU MiB):
 
 | K | official | cache_sdpa | cache_sdpa_tf32 | cache_sdpa_fp16 | fp16_reuse |
 |---|---|---|---|---|---|

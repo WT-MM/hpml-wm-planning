@@ -45,7 +45,7 @@ if V:
     print(f"Workload: CEM {M['cem_opt_steps']} iterations x {M['batch_candidates']} candidates (batch), horizon "
           f"{M['horizon']} (frameskip {M['frameskip']}), top-{M['cem_topk']}; {M['n_tasks']} paired tasks, seed {M['seed']}; "
           f"warm-up {M['warmup_plans']} plan(s) discarded; {M['repetitions']}; {M['timer']}.\n")
-    print("| variant | median plan (s) | mean ± sd (s) | p95 (s) | ms / CEM iter | candidates/s | peak GPU mem (MB) | "
+    print("| variant | median plan (s) | mean ± sd (s) | p95 (s) | ms / CEM iter | candidates/s | peak GPU mem (MiB) | "
           "speedup vs official [95% CI] | success | same outcome as official |")
     print("|---|---|---|---|---|---|---|---|---|---|")
     for name, v in V.items():
@@ -109,7 +109,7 @@ if R.get("scaling"):
     rows = [r for r in R["scaling"] if not r.get("oom")]; names = list(dict.fromkeys(r["variant"] for r in rows))
     Ks = sorted({r["K"] for r in rows}); get = {(r["variant"], r["K"]): r for r in rows}
     print(f"\nOne rollout call (one CEM iteration's world-model cost) vs candidates K; horizon {M['horizon']}, "
-          f"warm-up {rows[0]['warmup']} calls discarded, median of {rows[0]['reps']} calls, ms (peak GPU MB):\n")
+          f"warm-up {rows[0]['warmup']} calls discarded, median of {rows[0]['reps']} calls, ms (peak GPU MiB):\n")
     print("| K | " + " | ".join(names) + " |"); print("|---|" + "---|" * len(names))
     for K in Ks:
         print(f"| {K} | " + " | ".join(f"{get[n, K]['median_ms']:.1f} ({get[n, K]['peak_mem_alloc_mb']:.0f})" if (n, K) in get else "OOM" for n in names) + " |")

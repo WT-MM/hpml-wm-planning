@@ -33,8 +33,8 @@ Optimization / Technical Methodology
 Batched full model with the start frame encoded once per plan. The released code re-encodes it for every candidate in every iteration.
 2  Systems optimization
 Fused scaled_dot_product_attention with the same frame-causal mask, fp16 autocast or TF32, keys and values reused across rollout steps, torch.compile.
-3  Reference-conditioned predictor G
-Predicts final-feature deltas for the K alternatives from the cached reference rollout. Controls: equal-cost independent predictor, Jacobian linearization, copy-the-reference.
+3  Draft and verify
+A cheap draft scores all K candidates and the full model re-scores only the top few. Drafts: the reference-conditioned predictor G, a subset of the patch tokens, a shorter context.
 4  Planning-aware training
 Ranking loss on the CEM elites. Only after the base result is clear, per the proposal feedback.
 Measured: 1.05x
@@ -59,7 +59,7 @@ median plan latency
 per CEM iteration
 126
 candidates per second
-18.5 GB
+18.1 GiB
 peak GPU memory
 16/16
 task success
@@ -96,8 +96,8 @@ sampling, top-k, objective
 
 Limiting phase: the predictor rollout. Encoding, sampling and the objective together are under 5% of an official plan.
 GPU kernels (PyTorch Profiler, one official plan, 71.3 s of kernel time): GEMM (linear layers and attention matmuls) 59%, elementwise 24%, memcpy 8%, softmax 8%.
-Limiting resource: the hand-written attention materializes a 300 x 16 x 588 x 588 fp32 matrix (6.6 GB) per layer, hence 18.5 GB peak memory and the memcpy and softmax kernels.
-With fused attention (40.0 s of kernel time): GEMM 60%, fused attention kernel 33%; the memcpy and softmax kernels disappear and peak memory falls to 5.2 GB. With fp16 and rollout reuse the kernels take 10.1 s.
+Limiting resource: the hand-written attention materializes a 300 x 16 x 588 x 588 fp32 matrix (6.2 GiB) per layer, hence 18.1 GiB peak memory and the memcpy and softmax kernels.
+With fused attention (40.0 s of kernel time): GEMM 60%, fused attention kernel 33%; the memcpy and softmax kernels disappear and peak memory falls to 5.1 GiB. With fp16 and rollout reuse the kernels take 10.1 s.
 
 <!-- Slide number: 6 -->
 # Current Progress (3/5)
@@ -136,16 +136,16 @@ First Optimization / Implementation Status: 7 optimized variants against the off
 | fp16_reuse | 10.1 |
 | fp16_reuse_compile | 9.3 |
 
-| Variant | What changes | Median plan (s) | ms / CEM iter | Peak mem (GB) | Speedup [95% CI] | Success |
+| Variant | What changes | Median plan (s) | ms / CEM iter | Peak mem (GiB) | Speedup [95% CI] | Success |
 | --- | --- | --- | --- | --- | --- | --- |
-| official | DINO-WM as released | 71.36 | 2,379 | 18.5 | 1.00x | 16/16 |
-| cache | start frame encoded once | 68.27 | 2,276 | 18.6 | 1.05x [1.05, 1.05] | 16/16 |
-| cache_sdpa | cache + fused attention | 39.99 | 1,333 | 5.2 | 1.78x [1.78, 1.78] | 16/16 |
-| cache_sdpa_tf32 | cache_sdpa + TF32 matmul | 27.72 | 924 | 5.2 | 2.57x [2.57, 2.57] | 16/16 |
+| official | DINO-WM as released | 71.36 | 2,379 | 18.1 | 1.00x | 16/16 |
+| cache | start frame encoded once | 68.27 | 2,276 | 18.2 | 1.05x [1.05, 1.05] | 16/16 |
+| cache_sdpa | cache + fused attention | 39.99 | 1,333 | 5.1 | 1.78x [1.78, 1.78] | 16/16 |
+| cache_sdpa_tf32 | cache_sdpa + TF32 matmul | 27.72 | 924 | 5.1 | 2.57x [2.57, 2.57] | 16/16 |
 | cache_sdpa_fp16 | cache_sdpa + fp16 autocast | 14.28 | 476 | 3.7 | 5.00x [5.00, 5.00] | 16/16 |
-| fp16_compile | cache_sdpa_fp16 + torch.compile | 13.50 | 450 | 3.7 | 5.28x [5.28, 5.29] | 16/16 |
-| fp16_reuse | cache_sdpa_fp16 + rollout reuse | 10.09 | 336 | 9.4 | 7.07x [7.07, 7.08] | 15/16 |
-| fp16_reuse_compile | fp16_reuse + torch.compile | 9.32 | 311 | 8.9 | 7.66x [7.66, 7.66] | 16/16 |
+| fp16_compile | cache_sdpa_fp16 + torch.compile | 13.50 | 450 | 3.6 | 5.28x [5.28, 5.29] | 16/16 |
+| fp16_reuse | cache_sdpa_fp16 + rollout reuse | 10.09 | 336 | 9.2 | 7.07x [7.07, 7.08] | 15/16 |
+| fp16_reuse_compile | fp16_reuse + torch.compile | 9.32 | 311 | 8.7 | 7.66x [7.66, 7.66] | 16/16 |
 
 16 paired tasks. Speedup is the ratio of mean plan latencies, with a 95% bootstrap interval over tasks. The two torch.compile rows come from a second process on the same card with the same tasks and noise; cache_sdpa_fp16, run in both, measured 14.28 s and 14.29 s. Compiling costs a one-off 9 to 12 s, outside the plan latency.
 
@@ -156,7 +156,7 @@ Same decisions on identical inputs: against the official rollout the fp32 varian
 Rollout reuse is exact: in fp32 it reproduces the plain computation with a maximum difference of 0; in fp16 it differs by rounding only.
 Same plan quality, not identical plans: small differences compound over 30 iterations. Mean final CEM loss is 0.0880 for the official code and 0.0870 to 0.0893 for the optimized variants.
 One task lost: fp16_reuse fails task 3, the task with the highest planning loss. Its plan ends at state distance 33.2; cache_sdpa_fp16 ends at 30.9 and passes. Success on 16 open-loop tasks is a coarse measure.
-Cost of reuse: peak GPU memory rises from 3.7 to 9.4 GB for the cached keys and values.
+Cost of reuse: peak GPU memory rises from 3.7 to 9.2 GiB for the cached keys and values.
 1.5x target: met against the released code by systems work alone. Not yet attempted against the optimized full model, which is the project's claim. Budget for a cheaper scorer: 0.73 ms per candidate against 1.12 ms for the full model with reuse (fp16).
 
 | Variant | Max objective change vs official | Elites kept (of 30) | Max feature change vs the same computation without the step |
@@ -180,9 +180,10 @@ Remaining Work & Experiments
 5.  Other systems work: candidates split across both GPUs (cost is linear in K), unmasked per-frame attention calls, Nsight Systems trace. CUDA Graphs are not planned: GPU kernels already fill 14.3 s of the 14.3 s fp16 plan.
 6.  Tracking and delivery: experiment tracking for every run, reproduction README, final report and demo (original against accelerated planner).
 Scope Adjustments
-None required: the baseline runs and the profile supports the premise.
+The baseline runs and the profile supports the premise, so nothing is cut.
 The bar is higher: the comparison baseline is now the optimized full model, 1.78x (fp32) to 7.66x (fp16, reuse, compile) faster than the released code.
-PointMaze stays optional.
+The method is widened to draft and verify: the reference-conditioned predictor G becomes one draft among several, and the full model verifies the draft's top candidates.
+Optional second model: JEPA-WM, which follows the same recipe as DINO-WM, replaces PointMaze.
 Planning-aware training stays optional until the base result is clear, per the proposal feedback.
 
 <!-- Slide number: 10 -->

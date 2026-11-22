@@ -2,7 +2,7 @@ Hardware: NVIDIA GeForce RTX 5090 (driver 580.142), AMD Ryzen 9 9950X 16-Core Pr
 Model: DINO-WM pusht (model_latest.pth), encoder dinov2_vits14, predictor ViT depth 6 heads 16; context 3 frames x 196 tokens; DINO-WM commit 0a9492f.
 Workload: CEM 30 iterations x 300 candidates (batch), horizon 5 (frameskip 5), top-30; 16 paired tasks, seed 99; warm-up 1 plan(s) discarded; 1 plan per task; time.perf_counter around planner.plan with torch.cuda.synchronize before and after.
 
-| variant | median plan (s) | mean ± sd (s) | p95 (s) | ms / CEM iter | candidates/s | peak GPU mem (MB) | speedup vs official [95% CI] | success | same outcome as official |
+| variant | median plan (s) | mean ± sd (s) | p95 (s) | ms / CEM iter | candidates/s | peak GPU mem (MiB) | speedup vs official [95% CI] | success | same outcome as official |
 |---|---|---|---|---|---|---|---|---|---|
 | official | 71.61 | 71.61 ± 0.04 | 71.67 | 2387 | 126 | 18507 | 1.00x [1.00, 1.00] | 1.00 (16/16) | 1.00 |
 | cache | 68.43 | 68.43 ± 0.05 | 68.50 | 2281 | 132 | 18598 | 1.05x [1.05, 1.05] | 1.00 (16/16) | 1.00 |
@@ -41,7 +41,7 @@ Rollout vs the official rollout on identical inputs (one task, all candidates):
 | cache_sdpa | 4.8e-02 | 4.3e-04 | 5.3e-04 (1.37) | 1.00 | True |
 | cache_sdpa_fp16 | 3.3e-01 | 2.2e-03 | 4.2e-03 (1.37) | 1.00 | True |
 
-One rollout call (one CEM iteration's world-model cost) vs candidates K; horizon 5, warm-up 3 calls discarded, median of 20 calls, ms (peak GPU MB):
+One rollout call (one CEM iteration's world-model cost) vs candidates K; horizon 5, warm-up 3 calls discarded, median of 20 calls, ms (peak GPU MiB):
 
 | K | official | cache | cache_sdpa | cache_sdpa_fp16 |
 |---|---|---|---|---|

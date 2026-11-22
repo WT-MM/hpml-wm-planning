@@ -46,13 +46,13 @@ for name, v in V.items():
     run.finish()
 
 run = start("summary", "summary")
-cols = ["variant", "median plan (s)", "mean (s)", "sd (s)", "p95 (s)", "ms / CEM iter", "candidates/s", "peak GPU mem (MB)", "speedup vs official", "success"]
+cols = ["variant", "median plan (s)", "mean (s)", "sd (s)", "p95 (s)", "ms / CEM iter", "candidates/s", "peak GPU mem (MiB)", "speedup vs official", "success"]
 run.log({"latency": wandb.Table(columns=cols, data=[
     [n, v["latency_median_s"], v["latency_mean_s"], v["latency_std_s"], v["latency_p95_s"], v["per_cem_iter_median_ms"], v["candidates_per_s"],
      v["peak_mem_alloc_mb"], base["latency_mean_s"] / v["latency_mean_s"], f"{sum(v['success'])}/{len(v['success'])}"] for n, v in V.items()])})
 sc = [r for r in R.get("scaling", []) if not r.get("oom")]
 if sc:
-    run.log({"rollout_scaling": wandb.Table(columns=["variant", "K", "median ms", "ms per candidate", "peak GPU mem (MB)"],
+    run.log({"rollout_scaling": wandb.Table(columns=["variant", "K", "median ms", "ms per candidate", "peak GPU mem (MiB)"],
                                             data=[[r["variant"], r["K"], r["median_ms"], r["ms_per_candidate"], r["peak_mem_alloc_mb"]] for r in sc])})
 chk = {k: d for k, d in R["selfcheck"].items() if isinstance(d, dict)}
 run.log({"selfcheck_vs_official": wandb.Table(

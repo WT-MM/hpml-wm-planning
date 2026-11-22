@@ -27,7 +27,7 @@ Every variant plans the same tasks with the same candidate noise, on the same GP
 
 One RTX 5090, 16 paired tasks, 300 candidates per batch, warm-up 1 plan, seed 99 (`results/mid2_all/`, fp32 unless named):
 
-| variant | median plan (s) | peak GPU memory (MB) | speedup vs official [95% CI] | success |
+| variant | median plan (s) | peak GPU memory (MiB) | speedup vs official [95% CI] | success |
 |---|---|---|---|---|
 | `official` | 71.36 | 18508 | 1.00x | 16/16 |
 | `cache` | 68.27 | 18599 | 1.05x [1.05, 1.05] | 16/16 |
