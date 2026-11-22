@@ -40,7 +40,7 @@ Full tables (phase split, profiler kernels, rollout cost vs candidates, equivale
 
 ![latency and phase split](results/mid_seed99/summary.png)
 
-Each run folder under `results/` holds `results.json`, `summary.md`, figures, profiler tables and rollout images.
+Each run folder under `results/` holds `results.json`, `summary.md`, figures, profiler tables and rollout images.\nThe same run is on Weights & Biases: https://wandb.ai/wesley-maa-columbia-university/hpml-wm-planning (uploaded with\n`python bench/wandb_upload.py results/mid_seed99/results.json --entity ENTITY`).
 
 ## Reproduce
 

@@ -1,7 +1,7 @@
 # Mid-Point Report draft (content for HPML_Midpoint_Report_Template.pptx)
 
 Status of this draft: all numbers are from the run in `results/mid_seed99/` (one RTX 5090, 2026-11-22 UTC); the full
-tables are in `results/mid_seed99/summary.md`. Still open: teammates' UNIs and the tracking-dashboard link.
+tables are in `results/mid_seed99/summary.md`. Still open: teammates' UNIs.
 
 ## Title & Team
 
@@ -44,7 +44,7 @@ Hardware: one NVIDIA RTX 5090 (32 GB), Ryzen 9 9950X; all paired runs on the sam
 MLflow / W&B for run tracking.
 
 **Project links.** GitHub: https://github.com/WT-MM/hpml-wm-planning (private; add teammates and course staff).
-Experiment tracking dashboard: **[TO SET UP: W&B project or hosted MLflow]**.
+Experiment tracking dashboard (W&B): https://wandb.ai/wesley-maa-columbia-university/hpml-wm-planning (one run per variant, plus tables and figures; uploaded with `bench/wandb_upload.py`).
 
 ## Current Progress
 
