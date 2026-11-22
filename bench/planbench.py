@@ -54,22 +54,26 @@ def rollout_tail(wm, z, action):
     return wm.separate_emb(z)[0], z
 
 
+def start_latents(wm, cache, obs_0, act):
+    """Latents of the start frame(s) for the B candidates in act: one encoder pass per plan, expanded. Returns (z, n)."""
+    if "z" not in cache:
+        assert torch.equal(obs_0["visual"][0], obs_0["visual"][-1]), "cached rollout needs identical rows"
+        cache["z"] = wm.encode_obs({k: v[:1] for k, v in obs_0.items()})
+    B, n = act.shape[0], obs_0["visual"].shape[1]
+    vis = cache["z"]["visual"].expand(B, -1, -1, -1)
+    prop, act_emb = cache["z"]["proprio"].expand(B, -1, -1), wm.encode_act(act[:, :n])
+    if wm.concat_dim == 0:
+        return torch.cat([vis, prop.unsqueeze(2), act_emb.unsqueeze(2)], dim=2), n
+    P = vis.shape[2]  # same tiling as VWorldModel.encode
+    return torch.cat([vis, prop.unsqueeze(2).expand(-1, -1, P, -1).repeat(1, 1, 1, wm.num_proprio_repeat),
+                      act_emb.unsqueeze(2).expand(-1, -1, P, -1).repeat(1, 1, 1, wm.num_action_repeat)], dim=3), n
+
+
 def make_cached_rollout(wm, cache, before=lambda: None):
     """rollout() for a planner that passes the same start observation repeated B times: encode one copy, expand."""
     def rollout(obs_0, act):
         before()
-        if "z" not in cache:
-            assert torch.equal(obs_0["visual"][0], obs_0["visual"][-1]), "cached rollout needs identical rows"
-            cache["z"] = wm.encode_obs({k: v[:1] for k, v in obs_0.items()})
-        B, n = act.shape[0], obs_0["visual"].shape[1]
-        vis = cache["z"]["visual"].expand(B, -1, -1, -1)
-        prop, act_emb = cache["z"]["proprio"].expand(B, -1, -1), wm.encode_act(act[:, :n])
-        if wm.concat_dim == 0:
-            z = torch.cat([vis, prop.unsqueeze(2), act_emb.unsqueeze(2)], dim=2)
-        else:  # same tiling as VWorldModel.encode
-            P = vis.shape[2]
-            z = torch.cat([vis, prop.unsqueeze(2).expand(-1, -1, P, -1).repeat(1, 1, 1, wm.num_proprio_repeat),
-                           act_emb.unsqueeze(2).expand(-1, -1, P, -1).repeat(1, 1, 1, wm.num_action_repeat)], dim=3)
+        z, n = start_latents(wm, cache, obs_0, act)
         return rollout_tail(wm, z, act[:, n:])
     return rollout
 

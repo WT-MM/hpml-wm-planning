@@ -25,22 +25,36 @@ Every variant plans the same tasks with the same candidate noise, on the same GP
 
 ## Results
 
-One RTX 5090, fp32 unless named, 16 paired tasks, warm-up 1 plan, seed 99 (`results/mid_seed99/`):
+One RTX 5090, 16 paired tasks, 300 candidates per batch, warm-up 1 plan, seed 99 (`results/mid2_all/`, fp32 unless named):
 
 | variant | median plan (s) | peak GPU memory (MB) | speedup vs official [95% CI] | success |
 |---|---|---|---|---|
-| `official` | 71.61 | 18507 | 1.00x | 16/16 |
-| `cache` | 68.43 | 18598 | 1.05x [1.05, 1.05] | 16/16 |
-| `cache_sdpa` | 40.21 | 5217 | 1.78x [1.78, 1.78] | 16/16 |
-| `cache_sdpa_fp16` | 14.36 | 3740 | 4.99x [4.98, 4.99] | 16/16 |
+| `official` | 71.36 | 18508 | 1.00x | 16/16 |
+| `cache` | 68.27 | 18599 | 1.05x [1.05, 1.05] | 16/16 |
+| `cache_sdpa` | 39.99 | 5217 | 1.78x [1.78, 1.78] | 16/16 |
+| `cache_sdpa_tf32` | 27.72 | 5217 | 2.57x [2.57, 2.57] | 16/16 |
+| `cache_sdpa_fp16` | 14.28 | 3740 | 5.00x [5.00, 5.00] | 16/16 |
+| `fp16_compile` | 13.50 | 3704 | 5.28x [5.28, 5.29] | 16/16 |
+| `fp16_reuse` | 10.09 | 9402 | 7.07x [7.07, 7.08] | 15/16 |
+| `fp16_reuse_compile` | 9.32 | 8910 | 7.66x [7.66, 7.66] | 16/16 |
+
+`cache_sdpa_tf32` adds TF32 matmul, `*_compile` adds `torch.compile`, and `*_reuse` caches earlier frames' keys and values
+across rollout steps (exact in fp32: zero difference from the plain computation). The two compile rows come from a second
+process on the same card (`results/mid2c_seed99/`, merged with `bench/merge_runs.py`); `cache_sdpa_fp16`, run in both,
+measured 14.28 s and 14.29 s. `fp16_reuse` fails one borderline task. Last night's first run is in `results/mid_seed99/`.
 
 The predictor rollout is 95.5% of an official plan and its cost is linear in the number of candidates.
 Full tables (phase split, profiler kernels, rollout cost vs candidates, equivalence checks):
-`results/mid_seed99/summary.md`. The mid-point report is `docs/HPML_Midpoint_Report_Team28.pptx` (the course template, filled); its text is in `docs/midpoint_draft.md`.
+`results/mid2_all/summary.md`. The mid-point report is `docs/HPML_Midpoint_Report_Team28.pptx` (the course template, filled);
+`docs/midpoint_report_text.md` is its text, exported from the deck.
 
-![latency and phase split](results/mid_seed99/summary.png)
+![latency and phase split](results/mid2_all/summary.png)
 
-Each run folder under `results/` holds `results.json`, `summary.md`, figures, profiler tables and rollout images.\nThe same run is on Weights & Biases: https://wandb.ai/wesley-maa-columbia-university/hpml-wm-planning (uploaded with\n`python bench/wandb_upload.py results/mid_seed99/results.json --entity ENTITY`).
+Each run folder under `results/` holds `results.json`, `summary.md`, figures, profiler tables and rollout images.
+The runs are also on Weights & Biases: https://wandb.ai/wesley-maa-columbia-university/hpml-wm-planning (uploaded with
+`python bench/wandb_upload.py results/mid2_all/results.json --entity ENTITY`).
+
+`bench/draftscan.py` is a separate exploration (draft-and-verify scoring of CEM candidates), not part of these tables.
 
 ## Reproduce
 

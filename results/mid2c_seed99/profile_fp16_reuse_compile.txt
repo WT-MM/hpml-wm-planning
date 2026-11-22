@@ -1,0 +1,36 @@
+------------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                                                        Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg     Self CUDA   Self CUDA %    CUDA total  CUDA time avg    # of Calls  
+------------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                                                 aten::addmm         0.15%      14.022ms         0.21%      19.834ms       7.094us        3.021s        32.56%        3.021s       1.080ms          2796  
+void cutlass::Kernel2<cutlass_80_tensorop_f16_s16816gemm_...         0.00%       0.000us         0.00%       0.000us       0.000us        2.906s        31.32%        2.906s       1.937ms          1500  
+                          aten::_efficient_attention_forward         0.01%       1.125ms         0.06%       5.283ms      16.933us        2.233s        24.07%        2.234s       7.159ms           312  
+fmha_cutlassF_f16_aligned_64x64_rf_sm80(PyTorchMemEffAtte...         0.00%       0.000us         0.00%       0.000us       0.000us        2.233s        24.07%        2.233s       7.443ms           300  
+                                                    aten::mm         0.06%       5.919ms         0.08%       7.684ms       8.537us        1.847s        19.91%        1.847s       2.053ms           900  
+void cutlass::Kernel2<cutlass_80_tensorop_f16_s16816gemm_...         0.00%       0.000us         0.00%       0.000us       0.000us     700.259ms         7.55%     700.259ms       2.334ms           300  
+                              aten::_flash_attention_forward         0.02%       2.241ms         0.09%       8.517ms      13.916us     632.200ms         6.81%     632.200ms       1.033ms           612  
+void pytorch_flash::flash_fwd_kernel<Flash_fwd_kernel_tra...         0.00%       0.000us         0.00%       0.000us       0.000us     632.200ms         6.81%     632.200ms       1.033ms           612  
+void cutlass::Kernel2<cutlass_80_tensorop_f16_s16816gemm_...         0.00%       0.000us         0.00%       0.000us       0.000us     528.622ms         5.70%     528.622ms     881.037us           600  
+void cutlass::Kernel2<cutlass_80_tensorop_f16_s16816gemm_...         0.00%       0.000us         0.00%       0.000us       0.000us     468.075ms         5.04%     468.075ms     780.125us           600  
+                       triton_poi_fused__unsafe_view_gelu_11         0.01%     544.140us         0.01%       1.085ms       3.618us     276.153ms         2.98%     276.153ms     920.511us           300  
+                       triton_poi_fused__unsafe_view_gelu_11         0.00%       0.000us         0.00%       0.000us       0.000us     276.153ms         2.98%     276.153ms     920.511us           300  
+void cutlass::Kernel2<cutlass_80_tensorop_f16_s16816gemm_...         0.00%       0.000us         0.00%       0.000us       0.000us     264.086ms         2.85%     264.086ms     440.143us           600  
+     triton_poi_fused__to_copy_mm_native_layer_norm_t_view_1         0.04%       3.761ms         0.07%       6.793ms       3.904us     153.187ms         1.65%     153.187ms      88.038us          1740  
+     triton_poi_fused__to_copy_mm_native_layer_norm_t_view_1         0.00%       0.000us         0.00%       0.000us       0.000us     153.187ms         1.65%     153.187ms      88.038us          1740  
+    triton_poi_fused__unsafe_view_cat_split_transpose_view_4         0.01%     897.216us         0.02%       1.552ms       4.312us     142.212ms         1.53%     142.212ms     395.032us           360  
+    triton_poi_fused__unsafe_view_cat_split_transpose_view_4         0.00%       0.000us         0.00%       0.000us       0.000us     142.212ms         1.53%     142.212ms     395.032us           360  
+    triton_poi_fused__unsafe_view_cat_split_transpose_view_3         0.01%       1.008ms         0.02%       1.667ms       4.629us     138.536ms         1.49%     138.536ms     384.822us           360  
+    triton_poi_fused__unsafe_view_cat_split_transpose_view_3         0.00%       0.000us         0.00%       0.000us       0.000us     138.536ms         1.49%     138.536ms     384.822us           360  
+                       triton_poi_fused__unsafe_view_gelu_10         0.01%     705.559us         0.01%       1.358ms       3.773us     109.815ms         1.18%     109.815ms     305.043us           360  
+                       triton_poi_fused__unsafe_view_gelu_10         0.00%       0.000us         0.00%       0.000us       0.000us     109.815ms         1.18%     109.815ms     305.043us           360  
+                                                   aten::cat         0.02%       1.538ms         0.03%       2.479ms       6.792us      79.723ms         0.86%      79.723ms     218.419us           365  
+void at::native::(anonymous namespace)::CatArrayBatchedCo...         0.00%       0.000us         0.00%       0.000us       0.000us      77.840ms         0.84%      77.840ms     512.104us           152  
+triton_per_fused__to_copy__unsafe_view_add_native_layer_n...         0.01%     710.432us         0.01%       1.047ms       5.818us      56.512ms         0.61%      56.512ms     313.957us           180  
+triton_per_fused__to_copy__unsafe_view_add_native_layer_n...         0.00%       0.000us         0.00%       0.000us       0.000us      56.512ms         0.61%      56.512ms     313.957us           180  
+                        triton_poi_fused__unsafe_view_gelu_8         0.00%     363.146us         0.01%     690.534us       3.836us      54.971ms         0.59%      54.971ms     305.395us           180  
+                        triton_poi_fused__unsafe_view_gelu_8         0.00%       0.000us         0.00%       0.000us       0.000us      54.971ms         0.59%      54.971ms     305.395us           180  
+triton_per_fused__to_copy__unsafe_view_add_addmm_native_l...         0.00%     463.694us         0.01%     681.142us       5.676us      52.988ms         0.57%      52.988ms     441.570us           120  
+triton_per_fused__to_copy__unsafe_view_add_addmm_native_l...         0.00%       0.000us         0.00%       0.000us       0.000us      52.988ms         0.57%      52.988ms     441.570us           120  
+triton_per_fused__to_copy__unsafe_view_add_addmm_native_l...         0.00%     276.729us         0.00%     395.047us       6.584us      49.918ms         0.54%      49.918ms     831.964us            60  
+------------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+Self CPU time total: 9.306s
+Self CUDA time total: 9.278s

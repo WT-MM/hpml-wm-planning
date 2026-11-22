@@ -1,0 +1,169 @@
+$HPML_W/dino_wm/custom_resolvers.py:4: UserWarning: 
+The version_base parameter is not specified.
+Please specify a compatability version level, or None.
+Will assume defaults for version 1.1
+  @hydra.main(config_path=None)
+Loaded 18685 rollouts
+Loaded 21 rollouts
+Resuming from epoch 2: $HPML_W/ckpt/outputs/pusht/checkpoints/model_latest.pth
+Using cache found in $HPML_W/cache/torch/hub/facebookresearch_dinov2_main
+num_action_repeat: 1
+num_proprio_repeat: 1
+proprio encoder: ProprioceptiveEmbedding(
+  (patch_embed): Conv1d(4, 10, kernel_size=(1,), stride=(1,))
+)
+action encoder: ProprioceptiveEmbedding(
+  (patch_embed): Conv1d(10, 10, kernel_size=(1,), stride=(1,))
+)
+proprio_dim: 10, after repeat: 10
+action_dim: 10, after repeat: 10
+emb_dim: 404
+Model emb_dim:  404
+{
+ "gpu": "NVIDIA GeForce RTX 5090",
+ "gpu_index_visible": "1",
+ "driver": "580.142",
+ "cpu": "AMD Ryzen 9 9950X 16-Core Processor",
+ "torch": "2.15.0+cu132",
+ "cuda": "13.2",
+ "cudnn": 92600,
+ "python": "3.12.15",
+ "dtype": "float32 (fp16 autocast in *_fp16 variants)",
+ "tf32_matmul": false,
+ "tf32_cudnn": true,
+ "cudnn_benchmark": false,
+ "backend": "PyTorch eager (torch.compile only in *_compile variants)",
+ "variant_options": {
+  "cache_sdpa_fp16": {
+   "cache": "True",
+   "sdpa": "True",
+   "amp": "torch.float16"
+  },
+  "fp16_compile": {
+   "cache": "True",
+   "sdpa": "True",
+   "amp": "torch.float16",
+   "compile": "True"
+  },
+  "fp16_reuse_compile": {
+   "cache": "True",
+   "sdpa": "True",
+   "amp": "torch.float16",
+   "reuse": "True",
+   "compile": "True"
+  }
+ },
+ "model": "DINO-WM pusht (model_latest.pth), encoder dinov2_vits14, predictor ViT depth 6 heads 16",
+ "params_predictor": 20122600,
+ "params_encoder": 22056576,
+ "train_flags_as_loaded": {
+  "encoder": true,
+  "predictor": false,
+  "action_encoder": false,
+  "proprio_encoder": false
+ },
+ "eval_mode_forced": false,
+ "batch_candidates": 300,
+ "cem_opt_steps": 30,
+ "cem_topk": 30,
+ "horizon": 5,
+ "frameskip": 5,
+ "num_hist": 3,
+ "tokens_per_frame": 196,
+ "context_tokens_max": 588,
+ "img_size": 224,
+ "n_tasks": 16,
+ "seed": 99,
+ "warmup_plans": 1,
+ "repetitions": "1 plan per task",
+ "timer": "time.perf_counter around planner.plan with torch.cuda.synchronize before and after",
+ "dino_wm_commit": "0a9492fa12044b852ae9e001cc74604b79c8bb0c",
+ "argv": [
+  "--out",
+  "$HPML_W/runs/mid2c_seed99",
+  "--n-tasks",
+  "16",
+  "--phase-tasks",
+  "1",
+  "--profile",
+  "--variants",
+  "cache_sdpa_fp16,fp16_compile,fp16_reuse_compile"
+ ]
+}
+selfcheck {"official_rerun": {"max_abs_diff": 0.0, "mean_abs_diff": 0.0, "ref_abs_mean": 1.9284015893936157, "loss_max_abs_diff": 0.0, "loss_spread": 1.3721275329589844, "best_candidate_same": true, "topk_overlap": 1.0}, "official_two_half_batches": {"max_abs_diff": 0.0, "mean_abs_diff": 0.0, "ref_abs_mean": 1.9284015893936157, "loss_max_abs_diff": 0.0, "loss_spread": 1.3721275329589844, "best_candidate_same": true, "topk_overlap": 1.0}, "cache": {"max_abs_diff": 0.048071861267089844, "mean_abs_diff": 0.0004291492223273963, "ref_abs_mean": 1.9284015893936157, "loss_max_abs_diff": 0.0005256533622741699, "loss_spread": 1.3721275329589844, "best_candidate_same": true, "topk_overlap": 1.0, "first_rollout_s": 2.2398499180562794}, "cache_sdpa": {"max_abs_diff": 0.04806160926818848, "mean_abs_diff": 0.0004292319354135543, "ref_abs_mean": 1.9284015893936157, "loss_max_abs_diff": 0.0005266070365905762, "loss_spread": 1.3721275329589844, "best_candidate_same": true, "topk_overlap": 1.0, "first_rollout_s": 1.3161540883593261}, "cache_sdpa_tf32": {"max_abs_diff": 0.08367061614990234, "mean_abs_diff": 0.0009184380760416389, "ref_abs_mean": 1.9284015893936157, "loss_max_abs_diff": 0.001047968864440918, "loss_spread": 1.3721275329589844, "best_candidate_same": true, "topk_overlap": 1.0, "first_rollout_s": 0.9105864469893277, "parent": "cache_sdpa", "max_abs_diff_parent": 0.058528900146484375}, "cache_sdpa_reuse": {"max_abs_diff": 0.04806160926818848, "mean_abs_diff": 0.0004292319354135543, "ref_abs_mean": 1.9284015893936157, "loss_max_abs_diff": 0.0005266070365905762, "loss_spread": 1.3721275329589844, "best_candidate_same": true, "topk_overlap": 1.0, "first_rollout_s": 0.9568694387562573, "parent": "cache_sdpa", "max_abs_diff_parent": 0.0}, "cache_sdpa_fp16": {"max_abs_diff": 0.3273501396179199, "mean_abs_diff": 0.002171287778764963, "ref_abs_mean": 1.9284015893936157, "loss_max_abs_diff": 0.004245281219482422, "loss_spread": 1.3721275329589844, "best_candidate_same": true, "topk_overlap": 1.0, "first_rollout_s": 0.5050896960310638}, "fp16_compile": {"max_abs_diff": 0.33207082748413086, "mean_abs_diff": 0.0021708135027438402, "ref_abs_mean": 1.9284015893936157, "loss_max_abs_diff": 0.004121541976928711, "loss_spread": 1.3721275329589844, "best_candidate_same": true, "topk_overlap": 1.0, "first_rollout_s": 11.847976898308843, "parent": "cache_sdpa_fp16", "max_abs_diff_parent": 0.039566993713378906}, "fp16_reuse": {"max_abs_diff": 0.36181044578552246, "mean_abs_diff": 0.0021717615891247988, "ref_abs_mean": 1.9284015893936157, "loss_max_abs_diff": 0.0040378570556640625, "loss_spread": 1.3721275329589844, "best_candidate_same": true, "topk_overlap": 1.0, "first_rollout_s": 0.30721453204751015, "parent": "cache_sdpa_fp16", "max_abs_diff_parent": 0.049709439277648926}, "fp16_reuse_compile": {"max_abs_diff": 0.3364439010620117, "mean_abs_diff": 0.0021728179417550564, "ref_abs_mean": 1.9284015893936157, "loss_max_abs_diff": 0.0039376020431518555, "loss_spread": 1.3721275329589844, "best_candidate_same": true, "topk_overlap": 1.0, "first_rollout_s": 9.291685002855957, "parent": "cache_sdpa_fp16", "max_abs_diff_parent": 0.054545581340789795}, "fp32_within_3x_noise_floor": false}
+Success rate:  1.0
+        True,  True,  True,  True,  True,  True,  True]), 'state_dist': array([0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
+      dtype=float32)}
+Success rate:  0.0
+       False, False, False, False, False, False, False]), 'state_dist': array([ 76.95057, 165.55856, 399.83334, 195.92244, 265.60156, 248.48555,
+       223.92351, 185.0763 , 150.15778, 164.42686, 144.36809, 139.88492,
+       152.31755, 162.51659, 140.99763,  68.28931], dtype=float32)}
+USDT:2026-11-22 18:44:20 2:2 SyncActivityProfilerHandler.cpp:39] profiler_start
+USDT:2026-11-22 18:44:34 2:2 SyncActivityProfilerHandler.cpp:46] profiler_stop
+[cache_sdpa_fp16] task   0 plan  14.177s final_cem_loss 0.04514
+[cache_sdpa_fp16] task   1 plan  14.210s final_cem_loss 0.06486
+[cache_sdpa_fp16] task   2 plan  14.226s final_cem_loss 0.10009
+[cache_sdpa_fp16] task   3 plan  14.256s final_cem_loss 0.18339
+[cache_sdpa_fp16] task   4 plan  14.265s final_cem_loss 0.11724
+[cache_sdpa_fp16] task   5 plan  14.285s final_cem_loss 0.04646
+[cache_sdpa_fp16] task   6 plan  14.290s final_cem_loss 0.09977
+[cache_sdpa_fp16] task   7 plan  14.288s final_cem_loss 0.06174
+[cache_sdpa_fp16] task   8 plan  14.296s final_cem_loss 0.09637
+[cache_sdpa_fp16] task   9 plan  14.296s final_cem_loss 0.05677
+[cache_sdpa_fp16] task  10 plan  14.302s final_cem_loss 0.08855
+[cache_sdpa_fp16] task  11 plan  14.310s final_cem_loss 0.12056
+[cache_sdpa_fp16] task  12 plan  14.309s final_cem_loss 0.11108
+[cache_sdpa_fp16] task  13 plan  14.313s final_cem_loss 0.08979
+[cache_sdpa_fp16] task  14 plan  14.318s final_cem_loss 0.07514
+[cache_sdpa_fp16] task  15 plan  14.309s final_cem_loss 0.04419
+Success rate:  1.0
+        True,  True,  True,  True,  True,  True,  True]), 'state_dist': array([17.539114, 14.514598, 63.325523, 30.917162, 35.37209 , 19.318945,
+       18.359648, 20.942665, 17.990303, 33.543373, 36.143925, 22.865309,
+       34.46112 , 20.52257 , 28.209356, 18.910294], dtype=float32)}
+== cache_sdpa_fp16: median 14.293s p95 14.314s success 1.00 peak 3741MB phases {'encode_obs': 0.0003186620302701613, 'predict': 0.9913191703861552, 'objective': 0.0003709793500896837, 'other(sampling,topk,preprocess,act-encode)': 0.007991188233484938}
+USDT:2026-11-22 18:49:12 2:2 SyncActivityProfilerHandler.cpp:39] profiler_start
+USDT:2026-11-22 18:49:26 2:2 SyncActivityProfilerHandler.cpp:46] profiler_stop
+[fp16_compile] task   0 plan  13.494s final_cem_loss 0.04439
+[fp16_compile] task   1 plan  13.477s final_cem_loss 0.06053
+[fp16_compile] task   2 plan  13.489s final_cem_loss 0.10398
+[fp16_compile] task   3 plan  13.479s final_cem_loss 0.18248
+[fp16_compile] task   4 plan  13.509s final_cem_loss 0.11775
+[fp16_compile] task   5 plan  13.513s final_cem_loss 0.04730
+[fp16_compile] task   6 plan  13.501s final_cem_loss 0.09981
+[fp16_compile] task   7 plan  13.517s final_cem_loss 0.06453
+[fp16_compile] task   8 plan  13.524s final_cem_loss 0.09637
+[fp16_compile] task   9 plan  13.522s final_cem_loss 0.05823
+[fp16_compile] task  10 plan  13.512s final_cem_loss 0.08858
+[fp16_compile] task  11 plan  13.505s final_cem_loss 0.11890
+[fp16_compile] task  12 plan  13.504s final_cem_loss 0.09750
+[fp16_compile] task  13 plan  13.488s final_cem_loss 0.08897
+[fp16_compile] task  14 plan  13.501s final_cem_loss 0.07513
+[fp16_compile] task  15 plan  13.500s final_cem_loss 0.04688
+Success rate:  1.0
+        True,  True,  True,  True,  True,  True,  True]), 'state_dist': array([14.101477, 18.73577 , 74.694855, 24.185608, 34.0157  , 19.640427,
+       16.95753 , 36.0334  , 17.99031 , 33.16914 , 36.143917, 21.804167,
+       31.487804, 12.687964, 28.209358, 22.796524], dtype=float32)}
+== fp16_compile: median 13.502s p95 13.523s success 1.00 peak 3704MB phases {'encode_obs': 0.0003418751977105727, 'predict': 0.990641813381941, 'objective': 0.0003949088153672781, 'other(sampling,topk,preprocess,act-encode)': 0.008621402604981105}
+USDT:2026-11-22 18:53:43 2:2 SyncActivityProfilerHandler.cpp:39] profiler_start
+USDT:2026-11-22 18:53:52 2:2 SyncActivityProfilerHandler.cpp:46] profiler_stop
+[fp16_reuse_compile] task   0 plan   9.287s final_cem_loss 0.04719
+[fp16_reuse_compile] task   1 plan   9.291s final_cem_loss 0.06046
+[fp16_reuse_compile] task   2 plan   9.312s final_cem_loss 0.10622
+[fp16_reuse_compile] task   3 plan   9.306s final_cem_loss 0.18247
+[fp16_reuse_compile] task   4 plan   9.319s final_cem_loss 0.11725
+[fp16_reuse_compile] task   5 plan   9.313s final_cem_loss 0.04683
+[fp16_reuse_compile] task   6 plan   9.317s final_cem_loss 0.10100
+[fp16_reuse_compile] task   7 plan   9.330s final_cem_loss 0.06100
+[fp16_reuse_compile] task   8 plan   9.312s final_cem_loss 0.09654
+[fp16_reuse_compile] task   9 plan   9.325s final_cem_loss 0.05824
+[fp16_reuse_compile] task  10 plan   9.315s final_cem_loss 0.08854
+[fp16_reuse_compile] task  11 plan   9.318s final_cem_loss 0.12018
+[fp16_reuse_compile] task  12 plan   9.324s final_cem_loss 0.10424
+[fp16_reuse_compile] task  13 plan   9.325s final_cem_loss 0.09023
+[fp16_reuse_compile] task  14 plan   9.323s final_cem_loss 0.07515
+[fp16_reuse_compile] task  15 plan   9.320s final_cem_loss 0.04422
+Success rate:  1.0
+        True,  True,  True,  True,  True,  True,  True]), 'state_dist': array([24.78076 , 18.824001, 75.837654, 24.185623, 35.3721  , 32.010715,
+       17.238039, 32.60667 , 18.152048, 33.576946, 36.14391 , 22.517366,
+       29.479956, 18.297632, 28.209356, 18.9103  ], dtype=float32)}
+== fp16_reuse_compile: median 9.318s p95 9.326s success 1.00 peak 8910MB phases {'encode_obs': 0.0004948965580579171, 'predict': 0.9875869990552348, 'objective': 0.0005557275421406446, 'other(sampling,topk,preprocess,act-encode)': 0.01136237684456661}

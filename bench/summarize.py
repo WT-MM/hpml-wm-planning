@@ -31,6 +31,14 @@ def paired_speedup(a, b):
 print(f"Hardware: {M['gpu']} (driver {M['driver']}), {M['cpu']}; torch {M['torch']}, CUDA {M['cuda']}, cuDNN {M['cudnn']}, "
       f"{M['backend']}; dtype {M['dtype']}; TF32 matmul {M['tf32_matmul']}, TF32 cuDNN {M['tf32_cudnn']}.")
 print(f"Model: {M['model']}; context {M['num_hist']} frames x {M['tokens_per_frame']} tokens; DINO-WM commit {M['dino_wm_commit'][:7]}.")
+if M.get("merged"):  # written by merge_runs.py
+    g = M["merged"]
+    print(f"Two processes on the same card, same tasks and noise: {', '.join(g['extra_variants'])} come from run {g['extra_run']}, the rest "
+          f"from {g['main_run']}. Shared variant, median plan in each: "
+          + "; ".join(f"{k} {a:.3f} s and {b:.3f} s" for k, (a, b) in g["anchor_median_s"].items()) + ".")
+first = {k: d["first_rollout_s"] for k, d in R["selfcheck"].items() if isinstance(d, dict) and "compile" in k and "first_rollout_s" in d}
+if first:
+    print("torch.compile cold start (first rollout call, not part of any plan latency): " + ", ".join(f"{k} {v:.1f} s" for k, v in first.items()) + ".")
 
 if V:
     base = V.get("official") or next(iter(V.values()))
@@ -74,6 +82,8 @@ if V:
     fig, ax = plt.subplots(1, 2, figsize=(11, 3.6)); names = list(V)
     ax[0].boxplot([V[n]["latency_s"] for n in names], tick_labels=names)
     ax[0].set_ylabel("planning latency per task (s)"); ax[0].set_ylim(bottom=0); ax[0].tick_params(axis="x", labelsize=8)
+    for a in ax:
+        plt.setp(a.get_xticklabels(), rotation=25, ha="right")
     ax[0].set_title(f"CEM plan latency, {M['n_tasks']} paired tasks, {gpu}", fontsize=10)
     bottom = np.zeros(len(names))
     for k in base["phase_seconds_per_plan"]:
