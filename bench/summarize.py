@@ -29,15 +29,23 @@ def paired_speedup(a, b):
 
 
 print(f"Hardware: {M['gpu']} (driver {M['driver']}), {M['cpu']}; torch {M['torch']}, CUDA {M['cuda']}, cuDNN {M['cudnn']}, "
-      f"{M['backend']}; dtype {M['dtype']}; TF32 matmul {M['tf32_matmul']}.")
+      f"{M['backend']}; dtype {M['dtype']}; TF32 matmul {M['tf32_matmul']}, TF32 cuDNN {M['tf32_cudnn']}.")
 print(f"Model: {M['model']}; context {M['num_hist']} frames x {M['tokens_per_frame']} tokens; DINO-WM commit {M['dino_wm_commit'][:7]}.")
+if M.get("merged"):  # written by merge_runs.py
+    g = M["merged"]
+    print(f"Two processes on the same card, same tasks and noise: {', '.join(g['extra_variants'])} come from run {g['extra_run']}, the rest "
+          f"from {g['main_run']}. Shared variant, median plan in each: "
+          + "; ".join(f"{k} {a:.3f} s and {b:.3f} s" for k, (a, b) in g["anchor_median_s"].items()) + ".")
+first = {k: d["first_rollout_s"] for k, d in R["selfcheck"].items() if isinstance(d, dict) and "compile" in k and "first_rollout_s" in d}
+if first:
+    print("torch.compile cold start (first rollout call, not part of any plan latency): " + ", ".join(f"{k} {v:.1f} s" for k, v in first.items()) + ".")
 
 if V:
     base = V.get("official") or next(iter(V.values()))
     print(f"Workload: CEM {M['cem_opt_steps']} iterations x {M['batch_candidates']} candidates (batch), horizon "
           f"{M['horizon']} (frameskip {M['frameskip']}), top-{M['cem_topk']}; {M['n_tasks']} paired tasks, seed {M['seed']}; "
           f"warm-up {M['warmup_plans']} plan(s) discarded; {M['repetitions']}; {M['timer']}.\n")
-    print("| variant | median plan (s) | mean ± sd (s) | p95 (s) | ms / CEM iter | candidates/s | peak GPU mem (MB) | "
+    print("| variant | median plan (s) | mean ± sd (s) | p95 (s) | ms / CEM iter | candidates/s | peak GPU mem (MiB) | "
           "speedup vs official [95% CI] | success | same outcome as official |")
     print("|---|---|---|---|---|---|---|---|---|---|")
     for name, v in V.items():
@@ -74,6 +82,8 @@ if V:
     fig, ax = plt.subplots(1, 2, figsize=(11, 3.6)); names = list(V)
     ax[0].boxplot([V[n]["latency_s"] for n in names], tick_labels=names)
     ax[0].set_ylabel("planning latency per task (s)"); ax[0].set_ylim(bottom=0); ax[0].tick_params(axis="x", labelsize=8)
+    for a in ax:
+        plt.setp(a.get_xticklabels(), rotation=25, ha="right")
     ax[0].set_title(f"CEM plan latency, {M['n_tasks']} paired tasks, {gpu}", fontsize=10)
     bottom = np.zeros(len(names))
     for k in base["phase_seconds_per_plan"]:
@@ -90,11 +100,16 @@ for k, d in R["selfcheck"].items():
     if isinstance(d, dict):
         print(f"| {k} | {d['max_abs_diff']:.1e} | {d['mean_abs_diff']:.1e} | {d['loss_max_abs_diff']:.1e} ({d['loss_spread']:.2f}) | {d['topk_overlap']:.2f} | {d['best_candidate_same']} |")
 
+par = {k: d for k, d in R["selfcheck"].items() if isinstance(d, dict) and "parent" in d}
+if par:
+    print("\nAgainst the same computation without the extra step (max abs feature diff): "
+          + "; ".join(f"{k} vs {d['parent']} {d['max_abs_diff_parent']:.1e}" for k, d in par.items()) + ".")
+
 if R.get("scaling"):
     rows = [r for r in R["scaling"] if not r.get("oom")]; names = list(dict.fromkeys(r["variant"] for r in rows))
     Ks = sorted({r["K"] for r in rows}); get = {(r["variant"], r["K"]): r for r in rows}
     print(f"\nOne rollout call (one CEM iteration's world-model cost) vs candidates K; horizon {M['horizon']}, "
-          f"warm-up {rows[0]['warmup']} calls discarded, median of {rows[0]['reps']} calls, ms (peak GPU MB):\n")
+          f"warm-up {rows[0]['warmup']} calls discarded, median of {rows[0]['reps']} calls, ms (peak GPU MiB):\n")
     print("| K | " + " | ".join(names) + " |"); print("|---|" + "---|" * len(names))
     for K in Ks:
         print(f"| {K} | " + " | ".join(f"{get[n, K]['median_ms']:.1f} ({get[n, K]['peak_mem_alloc_mb']:.0f})" if (n, K) in get else "OOM" for n in names) + " |")
