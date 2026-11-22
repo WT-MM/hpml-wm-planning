@@ -43,12 +43,12 @@ Next
 Optional
 Profiling, Benchmarking & Evaluation Tools
 bench/planbench.py: paired per-task latency with torch.cuda.synchronize, peak memory, per-phase timers, official PushT evaluator
-PyTorch Profiler for per-kernel GPU time; bench/summarize.py for paired bootstrap confidence intervals
+PyTorch Profiler for per-kernel GPU time; bench/summarize.py for paired bootstrap confidence intervals; bench/import_wandb.py for tracking, with unit tests
 Planned: Nsight Systems trace
 Project Links
 GitHub: github.com/WT-MM/hpml-wm-planning
 Experiment tracking (W&B): wandb.ai/wesley-maa-columbia-university/hpml-wm-planning
-One W&B run per variant (per-task latency, rollout cost against K, summary metrics) plus the tables and figures. The raw results are also versioned in the repository under results/.
+One W&B run per variant: summary metrics, per-task and per-K series, the task, scaling and profiler tables, and the source JSON. The raw results and figures are versioned in the repository under results/.
 
 <!-- Slide number: 4 -->
 # Current Progress (1/5)
