@@ -115,7 +115,12 @@ attention (1.78x, 3.5x less memory), fp16 autocast (4.99x, 4.9x less memory), al
   (elite-set overlap, best-candidate agreement) and task success against planning latency.
 - Jacobian and copy-the-reference controls.
 - Closed-loop MPC evaluation (replanning), 3 seeds x >= 200 paired tasks, median and tail latency, throughput, memory.
-- `torch.compile` and Nsight Systems trace of the optimized planner; batch and search-budget sweeps for the baseline.
+- Reuse work across rollout steps (exact): each rollout calls the predictor on windows of 1, 2, 3, 3, 3 frames and
+  recomputes every frame each time. With frame-causal attention, earlier frames can be cached while the window grows,
+  and the last layer needs only the last frame. Estimated 1.3x, to be measured.
+- Other systems work: candidates split across both GPUs (cost is linear in K), unmasked per-frame attention calls,
+  `torch.compile` fusion of the small ops, Nsight Systems trace. CUDA Graphs are not planned: GPU kernels already fill
+  14.3 s of the 14.4 s plan, so there is no launch gap to remove at 300 candidates.
 - Experiment tracking for every run; reproduction README; final report and demo (original vs accelerated planner).
 
 **Scope adjustments.** The baseline is running, so none are required. PointMaze stays optional; planning-aware training
