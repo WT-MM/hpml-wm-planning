@@ -68,9 +68,12 @@ if V:
     ax[1].set_title("Where the time goes (instrumented pass)", fontsize=10)
     fig.tight_layout(); fig.savefig(path.with_name("summary.png"), dpi=160)
 
-print("\nRollout equivalence to the official rollout (max abs feature difference, eval mode): "
-      + ", ".join(f"{k} {d['max_abs_diff']:.1e}" for k, d in R["selfcheck"].items())
-      + f"; mean |feature| {next(iter(R['selfcheck'].values()))['ref_abs_mean']:.2f}")
+print("\nRollout vs the official rollout on identical inputs (one task, all candidates):\n")
+print("| compared with official | max abs feature diff | mean abs diff | max objective diff (spread across candidates) | CEM elite overlap | same best candidate |")
+print("|---|---|---|---|---|---|")
+for k, d in R["selfcheck"].items():
+    if isinstance(d, dict):
+        print(f"| {k} | {d['max_abs_diff']:.1e} | {d['mean_abs_diff']:.1e} | {d['loss_max_abs_diff']:.1e} ({d['loss_spread']:.2f}) | {d['topk_overlap']:.2f} | {d['best_candidate_same']} |")
 
 if R.get("scaling"):
     rows = [r for r in R["scaling"] if not r.get("oom")]; names = list(dict.fromkeys(r["variant"] for r in rows))
