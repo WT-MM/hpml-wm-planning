@@ -43,7 +43,7 @@ Hardware: one NVIDIA RTX 5090 (32 GB), Ryzen 9 9950X; all paired runs on the sam
 `bench/summarize.py` (paired bootstrap confidence intervals). Planned: Nsight Systems for the kernel-level view,
 MLflow / W&B for run tracking.
 
-**Project links.** GitHub: https://github.com/WT-MM/hpml-wm-planning (private; add teammates and course staff).
+**Project links.** GitHub: https://github.com/WT-MM/hpml-wm-planning (public).
 Experiment tracking dashboard (W&B): https://wandb.ai/wesley-maa-columbia-university/hpml-wm-planning (one run per variant, plus tables and figures; uploaded with `bench/wandb_upload.py`).
 
 ## Current Progress
