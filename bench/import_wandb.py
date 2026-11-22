@@ -11,6 +11,7 @@ from pathlib import Path
 
 
 IMPORT_SCHEMA = 1
+ROOT = Path(__file__).resolve().parents[1]
 # These arrays are indexed by paired task in planbench.run_variant, not repetitions.
 TASK_FIELDS = ("latency_s", "success", "state_dist", "cem_loss_trace", "actions")
 
@@ -21,6 +22,14 @@ def canonical_json(value):
 
 def digest(value):
     return hashlib.sha256(canonical_json(value).encode("utf-8")).hexdigest()
+
+
+def shown_path(path):
+    """Repo-relative inside the repository, else folder/file: never an absolute local path (the project is public)."""
+    try:
+        return str(path.resolve().relative_to(ROOT))
+    except ValueError:
+        return f"{path.parent.name}/{path.name}"
 
 
 def scalar_metrics(value, prefix):
@@ -126,7 +135,6 @@ def build_plans(path):
             "id": run_id,
             "name": f"historical-{path.parent.name}-{name}",
             "group": f"historical-{source_hash[:16]}",
-            "source_path": str(path.resolve()),
             "config": {
                 "variant": name,
                 "benchmark": result["meta"],
@@ -135,7 +143,7 @@ def build_plans(path):
                     "historical": True,
                     "experiments_executed": False,
                     "source_sha256": source_hash,
-                    "source_file": str(path),
+                    "source_file": shown_path(path),
                     "source_bytes_sha256": hashlib.sha256(source_bytes).hexdigest(),
                     "timestamp_semantics": "W&B timestamps describe import time; no experiment timestamp is inferred",
                 },
@@ -200,7 +208,7 @@ def main(argv=None):
     parser.add_argument("--results", type=Path, nargs="+", action="extend", required=True,
                         help="JSON files or directories containing results.json; may be repeated")
     parser.add_argument("--entity", help="W&B user or team (required for upload)")
-    parser.add_argument("--project", default="hpml-world-model-planning")
+    parser.add_argument("--project", default="hpml-wm-planning")
     parser.add_argument("--dry-run", action="store_true",
                         help="print validated payloads as JSON; no SDK, authentication, or network")
     args = parser.parse_args(argv)

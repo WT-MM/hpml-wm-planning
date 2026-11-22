@@ -133,7 +133,9 @@ class ImportTests(unittest.TestCase):
         )
         payload = json.loads(result.stdout)
         self.assertEqual(len(payload["runs"]), 8)
-        self.assertEqual(payload["project"], "hpml-world-model-planning")
+        self.assertEqual(payload["project"], "hpml-wm-planning")
+        for run in payload["runs"]:  # no absolute local path leaves the machine
+            self.assertNotIn(str(ROOT), json.dumps(run))
 
     def test_validates_all_inputs_before_loading_sdk(self):
         bad = self.write({})
