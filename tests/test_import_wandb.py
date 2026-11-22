@@ -15,7 +15,8 @@ from bench import import_wandb as importer
 
 
 ROOT = Path(__file__).resolve().parents[1]
-RESULTS = sorted((ROOT / "results").glob("*/results.json"))
+# Named fixtures: a new folder under results/ must not change what these tests count.
+RESULTS = [ROOT / "results" / name / "results.json" for name in ("mid_seed99", "smoke")]
 
 
 class ImportTests(unittest.TestCase):

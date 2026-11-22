@@ -39,7 +39,7 @@ class WandbSDKTests(unittest.TestCase):
                 # Offline artifacts have no remote upload to wait for.
                 with patch.object(wandb, "init", side_effect=offline_init), \
                      patch.object(wandb.Artifact, "wait", return_value=None):
-                    for source in sorted((root / "results").glob("*/results.json")):
+                    for source in (root / "results" / name / "results.json" for name in ("mid_seed99", "smoke")):
                         for plan in importer.build_plans(source):
                             importer.upload_plan(plan, wandb, "local-validation", "hpml-import-test")
                 tables = list(Path(temp).rglob("*.table.json"))
