@@ -50,6 +50,12 @@ class ImportTests(unittest.TestCase):
                 self.assertFalse(plan["config"]["import"]["experiments_executed"])
                 table = plan["tables"]["tasks"]
                 task_count += len(table["data"])
+                scaled = [r for r in result["scaling"] if r["variant"] == name and not r.get("oom")]
+                self.assertEqual(len(plan["series"]), len(table["data"]) + len(scaled))
+                self.assertEqual(plan["series"][0]["task/latency_s"], variant["latency_s"][0])
+                self.assertEqual(plan["series"][-1]["rollout/median_ms"], scaled[-1]["median_ms"])
+                self.assertAlmostEqual(plan["summary"]["derived/speedup_vs_official"],
+                                       result["variants"]["official"]["latency_mean_s"] / variant["latency_mean_s"])
                 for column in importer.TASK_FIELDS:
                     index = table["columns"].index(column)
                     self.assertEqual([row[index] for row in table["data"]], variant[column])
@@ -175,7 +181,7 @@ class ImportTests(unittest.TestCase):
             importer.upload_plan(plan, sdk, "team", "project")
         self.assertEqual(len(sdk.runs_by_id), 1)
         run = sdk.runs_by_id[plan["id"]]
-        run.log.assert_called_once()
+        self.assertEqual(run.log.call_count, 1 + len(plan["series"]))  # tables, then the series
         run.log_artifact.assert_called_once()
         self.assertEqual(snapshots, [plan["source_bytes"]])
         self.assertTrue(run.summary["import/complete"])

@@ -50,6 +50,19 @@ def row_table(rows):
     return {"columns": columns, "data": [[row.get(key) for key in columns] for row in rows]}
 
 
+def series(variant, scaling_rows):
+    """Per-task and per-K rows: W&B plots history against a custom axis, not table columns."""
+    scalar = [key for key in TASK_FIELDS if key in variant and key not in ("actions", "cem_loss_trace")]
+    traces = variant.get("cem_loss_trace", [])
+    rows = [{"task": i, **{f"task/{key}": variant[key][i] for key in scalar},
+             **({"task/final_cem_loss": traces[i][-1]} if i < len(traces) and traces[i] else {})}
+            for i in range(len(variant[scalar[0]]) if scalar else 0)]
+    rows += [{"K": row["K"], **{f"rollout/{key}": value for key, value in row.items()
+                                if key not in ("variant", "K") and type(value) in (int, float)}}
+             for row in scaling_rows if "K" in row and not row.get("oom")]
+    return rows
+
+
 def validate_document(result):
     if not isinstance(result, dict):
         raise ValueError("expected a JSON object")
@@ -131,6 +144,10 @@ def build_plans(path):
         # not an invented equivalence check for the official variant.
         for section in ("selfcheck", "reference"):
             summary.update(scalar_metrics(result.get(section, {}), section))
+        official = result["variants"].get("official", {})
+        if official.get("latency_mean_s") and variant.get("latency_mean_s"):
+            # The one derived metric, kept apart by its prefix: the project's headline number.
+            summary["derived/speedup_vs_official"] = official["latency_mean_s"] / variant["latency_mean_s"]
         plans.append({
             "id": run_id,
             "name": f"historical-{path.parent.name}-{name}",
@@ -150,6 +167,7 @@ def build_plans(path):
             },
             "summary": summary,
             "tables": tables,
+            "series": series(variant, [row for row in result.get("scaling", []) if row["variant"] == name]),
             # Original bytes are held separately to snapshot precisely what was validated.
             "source_bytes": source_bytes,
         })
@@ -198,6 +216,10 @@ def upload_plan(plan, wandb, entity, project):
             tables[name] = wandb.Table(columns=table["columns"], data=data)
         if tables:
             run.log(tables)
+        run.define_metric("task/*", step_metric="task")
+        run.define_metric("rollout/*", step_metric="K")
+        for row in plan["series"]:
+            run.log(row)
         run.summary.update(plan["summary"])
         run.summary["import/complete"] = True
     print(f"Imported: {entity}/{project}/{plan['id']}")
