@@ -48,7 +48,9 @@ Full tables (phase split, profiler kernels, rollout cost vs candidates, equivale
 `results/mid2_all/summary.md`. The mid-point report is `docs/HPML_Midpoint_Report_Team28.pptx` (the course template, filled);
 `docs/midpoint_report_text.md` is its text, exported from the deck.
 
-![latency and phase split](results/mid2_all/summary.png)
+![Median time per plan, speedup, peak memory and tasks solved for each variant](results/mid2_all/summary.png)
+
+![Where the released code spends a plan, and rollout cost against candidates per call](results/mid2_all/scaling.png)
 
 Each run folder under `results/` holds `results.json`, `summary.md`, figures, profiler tables and rollout images.
 The runs are also on Weights & Biases: https://wandb.ai/wesley-maa-columbia-university/hpml-wm-planning (see
