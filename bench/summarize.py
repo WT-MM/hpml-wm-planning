@@ -113,17 +113,10 @@ if V:
 
     # summary.png: one row per variant, read as a table with the plan time drawn as a bar
     names = list(V); n = len(names); best = min(V.values(), key=lambda v: v["latency_median_s"])
-    fig = plt.figure(figsize=(11.6, 1.85 + 0.47 * n)); H = fig.get_figheight(); top, bot = 1 - 1.1 / H, 0.75 / H
+    fig = plt.figure(figsize=(11.6, 1.2 + 0.47 * n)); H = fig.get_figheight(); top, bot = 1 - 0.42 / H, 0.75 / H
     ax = fig.add_axes([0.375, bot, 0.30, top - bot]); row = blended_transform_factory(fig.transFigure, ax.transData)
     hbars(ax, [V[k]["latency_median_s"] for k in names], [GRAY if V[k] is base else BLUE for k in names],
           lambda v: f"{v:.1f} s", 1.2 * max(V[k]["latency_median_s"] for k in names))
-    off = "official" in V  # a run without the released code as its first row gets a plain title and no step note
-    fig.text(0.012, 1 - 0.32 / H, (f"One plan takes {base['latency_median_s']:.1f} s with the released code and "
-                                   f"{best['latency_median_s']:.1f} s optimized") if off else
-             f"Median time per plan: {base['latency_median_s']:.1f} s for {base['variant']}, {best['latency_median_s']:.1f} s at best",
-             fontsize=15, fontweight="bold", va="center")
-    fig.text(0.012, 1 - 0.62 / H, f"{M['n_tasks']} paired PushT tasks on one {gpu}; each plan is {M['cem_opt_steps']} CEM iterations "
-             f"of {M['batch_candidates']} candidates", fontsize=11, color=INK2, va="center")
     cols = [(0.012, "left", "Planner variant"), (0.375, "left", "Median time per plan"), (0.775, "right", "Speedup"),
             (0.89, "right", "Peak GPU memory"), (0.988, "right", "Tasks solved")]
     for x, ha, text in cols:
@@ -137,12 +130,11 @@ if V:
                  f"{sum(v['success'])}/{len(v['success'])}"]
         for (x, ha, _), text in zip(cols[2:], cells):
             ax.text(x, y, text, transform=row, ha=ha, va="center", fontweight=bold)
-    fig.text(0.012, 0.45 / H, f"Conditions: {gpu}, PyTorch {M['torch'].split('+')[0]}, CUDA {M['cuda']}; fp32, FP16 autocast where named; "
-             f"{M['warmup_plans']} warm-up plan discarded, then {M['repetitions']}; seed {M['seed']}; GPU-synchronized timer.",
+    fig.text(0.012, 0.45 / H, f"{M['n_tasks']} paired PushT tasks, {M['cem_opt_steps']} CEM iterations of {M['batch_candidates']} candidates, "
+             f"seed {M['seed']}. {M['warmup_plans']} warm-up plan discarded, then {M['repetitions']}. GPU-synchronized timer.",
              fontsize=10, color=INK2, va="center")
-    fig.text(0.012, 0.2 / H, "Speedup is the ratio of mean plan times against the first row."
-             + (" Rows 2 to 4 each add to the row above; the FP16 rows build on fused attention." if off else ""),
-             fontsize=10, color=INK2, va="center")
+    fig.text(0.012, 0.2 / H, f"{gpu}, PyTorch {M['torch'].split('+')[0]}, CUDA {M['cuda']}. fp32, FP16 autocast where named. "
+             "Speedup: mean plan time relative to the first row.", fontsize=10, color=INK2, va="center")
     fig.savefig(path.with_name("summary.png")); plt.close(fig)
 
 print("\nRollout vs the official rollout on identical inputs (one task, all candidates):\n")
@@ -166,9 +158,9 @@ if R.get("scaling"):
     for K in Ks:
         print(f"| {K} | " + " | ".join(f"{get[n, K]['median_ms']:.1f} ({get[n, K]['peak_mem_alloc_mb']:.0f})" if (n, K) in get else "OOM" for n in names) + " |")
     # scaling.png: where the released code spends a plan (left), and what one rollout call costs against K (right)
-    fig = plt.figure(figsize=(11.6, 4.9)); H = fig.get_figheight()
+    fig = plt.figure(figsize=(11.6, 4.2)); H = fig.get_figheight()
     ph = base["phase_seconds_per_plan"]; tot = sum(ph.values())
-    groups = [(f"Wall time of one plan, {tot:.1f} s", [("Predictor rollouts", ph.get("predict", 0) / tot),
+    groups = [(f"{LABEL.get(base['variant'], base['variant'])}: wall time of one plan, {tot:.1f} s", [("Predictor rollouts", ph.get("predict", 0) / tot),
                ("Encoding observations", ph.get("encode_obs", 0) / tot),
                ("Sampling, objective, other", 1 - (ph.get("predict", 0) + ph.get("encode_obs", 0)) / tot)])]
     g = (kern if R.get("profile_top_ops") else {}).get(base["variant"])
@@ -176,11 +168,7 @@ if R.get("scaling"):
         short = {"GEMM (linear layers, attention matmul)": "Matrix multiply (GEMM)", "memcpy": "Memory copy"}
         groups.append(("GPU kernel time, PyTorch Profiler", [(short.get(k, k[0].upper() + k[1:]), f) for k, f in
                                                              sorted(g.items(), key=lambda x: -x[1]) if f >= 0.01]))
-    fig.text(0.012, 1 - 0.32 / H, f"The predictor is {100 * ph.get('predict', 0) / tot:.1f}% of a plan", fontsize=15,
-             fontweight="bold", va="center")
-    fig.text(0.012, 1 - 0.62 / H, f"{LABEL.get(base['variant'], base['variant'])}, {M['batch_candidates']} candidates per CEM iteration", fontsize=11,
-             color=INK2, va="center")
-    rows_total = sum(len(r) + 1.4 for _, r in groups); y1 = 1 - 1.0 / H; unit = (y1 - 0.3 / H) / rows_total
+    rows_total = sum(len(r) + 1.4 for _, r in groups); y1 = 1 - 0.1 / H; unit = (y1 - 0.3 / H) / rows_total
     for title, rws in groups:
         fig.text(0.012, y1 - 0.55 * unit, title, fontsize=10, color=MUTED, va="center")
         ax = fig.add_axes([0.215, y1 - (len(rws) + 1) * unit, 0.25, len(rws) * unit])
@@ -189,10 +177,8 @@ if R.get("scaling"):
             ax.text(0.012, y, name, transform=blended_transform_factory(fig.transFigure, ax.transData), va="center")
         y1 -= (len(rws) + 1.4) * unit
 
-    x0 = 0.53; ax = fig.add_axes([x0 + 0.045, 0.6 / H, 0.265, 1 - 1.75 / H])
-    fig.text(x0, 1 - 0.32 / H, "Rollout cost grows linearly with candidates", fontsize=15, fontweight="bold", va="center")
-    fig.text(x0, 1 - 0.62 / H, f"Median time of one rollout call (horizon {M['horizon']}) against candidates per call K",
-             fontsize=11, color=INK2, va="center")
+    x0 = 0.53; ax = fig.add_axes([x0 + 0.045, 0.6 / H, 0.265, 1 - 1.15 / H])
+    fig.text(x0, 1 - 0.1 / H - 0.55 * unit, f"Median time of one rollout call, horizon {M['horizon']}", fontsize=10, color=MUTED, va="center")
     others = [k for k in names if k != base["variant"]]
     color = {k: plt.matplotlib.colors.LinearSegmentedColormap.from_list("r", RAMP)(i / max(len(others) - 1, 1))
              for i, k in enumerate(others)} | {base["variant"]: GRAY}
