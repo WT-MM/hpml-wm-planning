@@ -130,7 +130,8 @@ if V:
                  f"{sum(v['success'])}/{len(v['success'])}"]
         for (x, ha, _), text in zip(cols[2:], cells):
             ax.text(x, y, text, transform=row, ha=ha, va="center", fontweight=bold)
-    fig.text(0.012, 0.22 / H, f"{gpu}, fp32 unless marked FP16. {M['n_tasks']} tasks, 1 plan each, {M['warmup_plans']} warm-up plan discarded.",
+    fig.text(0.012, 0.22 / H, f"Each variant planned all {M['n_tasks']} tasks once on the same {gpu}, after {M['warmup_plans']} discarded warm-up "
+             f"plan{'' if M['warmup_plans'] == 1 else 's'}, in fp32 unless marked FP16.",
              fontsize=10, color=MUTED, va="center")
     fig.savefig(path.with_name("summary.png")); plt.close(fig)
 
