@@ -113,7 +113,7 @@ if V:
 
     # summary.png: one row per variant, read as a table with the plan time drawn as a bar
     names = list(V); n = len(names); best = min(V.values(), key=lambda v: v["latency_median_s"])
-    fig = plt.figure(figsize=(11.6, 1.55 + 0.47 * n)); H = fig.get_figheight(); top, bot = 1 - 1.1 / H, 0.45 / H
+    fig = plt.figure(figsize=(11.6, 1.85 + 0.47 * n)); H = fig.get_figheight(); top, bot = 1 - 1.1 / H, 0.75 / H
     ax = fig.add_axes([0.375, bot, 0.30, top - bot]); row = blended_transform_factory(fig.transFigure, ax.transData)
     hbars(ax, [V[k]["latency_median_s"] for k in names], [GRAY if V[k] is base else BLUE for k in names],
           lambda v: f"{v:.1f} s", 1.2 * max(V[k]["latency_median_s"] for k in names))
@@ -137,8 +137,12 @@ if V:
                  f"{sum(v['success'])}/{len(v['success'])}"]
         for (x, ha, _), text in zip(cols[2:], cells):
             ax.text(x, y, text, transform=row, ha=ha, va="center", fontweight=bold)
-    fig.text(0.012, 0.17 / H, "Speedup is the ratio of mean plan times against the first row."
-             + (" Rows 2 to 4 each add to the row above; the FP16 rows build on fused attention." if off else ""), fontsize=9, color=MUTED, va="center")
+    fig.text(0.012, 0.45 / H, f"Conditions: {gpu}, PyTorch {M['torch'].split('+')[0]}, CUDA {M['cuda']}; fp32, FP16 autocast where named; "
+             f"{M['warmup_plans']} warm-up plan discarded, then {M['repetitions']}; seed {M['seed']}; GPU-synchronized timer.",
+             fontsize=10, color=INK2, va="center")
+    fig.text(0.012, 0.2 / H, "Speedup is the ratio of mean plan times against the first row."
+             + (" Rows 2 to 4 each add to the row above; the FP16 rows build on fused attention." if off else ""),
+             fontsize=10, color=INK2, va="center")
     fig.savefig(path.with_name("summary.png")); plt.close(fig)
 
 print("\nRollout vs the official rollout on identical inputs (one task, all candidates):\n")
