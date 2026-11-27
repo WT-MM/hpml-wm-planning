@@ -1,0 +1,175 @@
+Gym has been unmaintained since 2022 and does not support NumPy 2.0 amongst other critical functionality.
+Please upgrade to Gymnasium, the maintained drop-in replacement of Gym, or contact the authors of your software and request that they upgrade.
+See the migration guide at https://gymnasium.farama.org/introduction/migration_guide/ for additional information.
+$HPML_W/dino_wm/custom_resolvers.py:4: UserWarning: 
+The version_base parameter is not specified.
+Please specify a compatability version level, or None.
+Will assume defaults for version 1.1
+  @hydra.main(config_path=None)
+Loaded 18685 rollouts
+Loaded 21 rollouts
+Resuming from epoch 2: $HPML_W/ckpt/outputs/pusht/checkpoints/model_latest.pth
+Using cache found in $HPML_W/cache/torch/hub/facebookresearch_dinov2_main
+num_action_repeat: 1
+num_proprio_repeat: 1
+proprio encoder: ProprioceptiveEmbedding(
+  (patch_embed): Conv1d(4, 10, kernel_size=(1,), stride=(1,))
+)
+action encoder: ProprioceptiveEmbedding(
+  (patch_embed): Conv1d(10, 10, kernel_size=(1,), stride=(1,))
+)
+proprio_dim: 10, after repeat: 10
+action_dim: 10, after repeat: 10
+emb_dim: 404
+Model emb_dim:  404
+{
+ "gpu": "NVIDIA GeForce RTX 5090",
+ "gpu_index_visible": "1",
+ "driver": "580.142",
+ "cpu": "AMD Ryzen 9 9950X 16-Core Processor",
+ "torch": "2.15.0+cu132",
+ "cuda": "13.2",
+ "cudnn": 92600,
+ "python": "3.12.15",
+ "dtype": "float32 (fp16 autocast in *_fp16 variants)",
+ "tf32_matmul": false,
+ "tf32_cudnn": true,
+ "cudnn_benchmark": false,
+ "backend": "PyTorch eager (torch.compile only in *_compile variants)",
+ "variant_options": {
+  "fp16_reuse": {
+   "cache": "True",
+   "sdpa": "True",
+   "amp": "torch.float16",
+   "reuse": "True"
+  },
+  "fp16_unmasked_reuse": {
+   "cache": "True",
+   "sdpa": "True",
+   "amp": "torch.float16",
+   "reuse": "True",
+   "unmasked": "True"
+  },
+  "fp16_unmasked_reuse_compile": {
+   "cache": "True",
+   "sdpa": "True",
+   "amp": "torch.float16",
+   "reuse": "True",
+   "unmasked": "True",
+   "compile": "True"
+  }
+ },
+ "model": "DINO-WM pusht (model_latest.pth), encoder dinov2_vits14, predictor ViT depth 6 heads 16",
+ "params_predictor": 20122600,
+ "params_encoder": 22056576,
+ "train_flags_as_loaded": {
+  "encoder": true,
+  "predictor": false,
+  "action_encoder": false,
+  "proprio_encoder": false
+ },
+ "eval_mode_forced": false,
+ "batch_candidates": 300,
+ "cem_opt_steps": 30,
+ "cem_topk": 30,
+ "horizon": 5,
+ "frameskip": 5,
+ "num_hist": 3,
+ "tokens_per_frame": 196,
+ "context_tokens_max": 588,
+ "img_size": 224,
+ "n_tasks": 16,
+ "seed": 99,
+ "warmup_plans": 1,
+ "repetitions": "1 plan per task",
+ "timer": "time.perf_counter around planner.plan with torch.cuda.synchronize before and after",
+ "dino_wm_commit": "0a9492fa12044b852ae9e001cc74604b79c8bb0c",
+ "argv": [
+  "--out",
+  "$HPML_W/runs/sys_unmasked_seed99",
+  "--variants",
+  "fp16_reuse,fp16_unmasked_reuse,fp16_unmasked_reuse_compile",
+  "--n-tasks",
+  "16",
+  "--phase-tasks",
+  "2",
+  "--seed",
+  "99"
+ ]
+}
+selfcheck {"official_rerun": {"max_abs_diff": 0.0, "mean_abs_diff": 0.0, "ref_abs_mean": 1.9284015893936157, "loss_max_abs_diff": 0.0, "loss_spread": 1.3721275329589844, "best_candidate_same": true, "topk_overlap": 1.0}, "official_two_half_batches": {"max_abs_diff": 0.0, "mean_abs_diff": 0.0, "ref_abs_mean": 1.9284015893936157, "loss_max_abs_diff": 0.0, "loss_spread": 1.3721275329589844, "best_candidate_same": true, "topk_overlap": 1.0}, "cache": {"max_abs_diff": 0.048071861267089844, "mean_abs_diff": 0.0004291492223273963, "ref_abs_mean": 1.9284015893936157, "loss_max_abs_diff": 0.0005256533622741699, "loss_spread": 1.3721275329589844, "best_candidate_same": true, "topk_overlap": 1.0, "first_rollout_s": 2.285542673896998}, "cache_sdpa": {"max_abs_diff": 0.04806160926818848, "mean_abs_diff": 0.0004292319354135543, "ref_abs_mean": 1.9284015893936157, "loss_max_abs_diff": 0.0005266070365905762, "loss_spread": 1.3721275329589844, "best_candidate_same": true, "topk_overlap": 1.0, "first_rollout_s": 1.3417877932079136}, "cache_sdpa_tf32": {"max_abs_diff": 0.08367061614990234, "mean_abs_diff": 0.0009184380760416389, "ref_abs_mean": 1.9284015893936157, "loss_max_abs_diff": 0.001047968864440918, "loss_spread": 1.3721275329589844, "best_candidate_same": true, "topk_overlap": 1.0, "first_rollout_s": 0.9998883120715618, "parent": "cache_sdpa", "max_abs_diff_parent": 0.058528900146484375}, "cache_sdpa_reuse": {"max_abs_diff": 0.04806160926818848, "mean_abs_diff": 0.0004292319354135543, "ref_abs_mean": 1.9284015893936157, "loss_max_abs_diff": 0.0005266070365905762, "loss_spread": 1.3721275329589844, "best_candidate_same": true, "topk_overlap": 1.0, "first_rollout_s": 0.9768258719705045, "parent": "cache_sdpa", "max_abs_diff_parent": 0.0}, "cache_sdpa_unmasked_reuse": {"max_abs_diff": 0.04806160926818848, "mean_abs_diff": 0.0004292319354135543, "ref_abs_mean": 1.9284015893936157, "loss_max_abs_diff": 0.0005266070365905762, "loss_spread": 1.3721275329589844, "best_candidate_same": true, "topk_overlap": 1.0, "first_rollout_s": 0.9568053940311074, "parent": "cache_sdpa", "max_abs_diff_parent": 0.0}, "cache_sdpa_fp16": {"max_abs_diff": 0.3273501396179199, "mean_abs_diff": 0.002171287778764963, "ref_abs_mean": 1.9284015893936157, "loss_max_abs_diff": 0.004245281219482422, "loss_spread": 1.3721275329589844, "best_candidate_same": true, "topk_overlap": 1.0, "first_rollout_s": 0.5415430027060211}, "fp16_reuse": {"max_abs_diff": 0.36181044578552246, "mean_abs_diff": 0.0021717615891247988, "ref_abs_mean": 1.9284015893936157, "loss_max_abs_diff": 0.0040378570556640625, "loss_spread": 1.3721275329589844, "best_candidate_same": true, "topk_overlap": 1.0, "first_rollout_s": 0.338954895734787, "parent": "cache_sdpa_fp16", "max_abs_diff_parent": 0.049709439277648926}, "fp16_unmasked_reuse": {"max_abs_diff": 0.3476138114929199, "mean_abs_diff": 0.0021715022157877684, "ref_abs_mean": 1.9284015893936157, "loss_max_abs_diff": 0.0041506290435791016, "loss_spread": 1.3721275329589844, "best_candidate_same": true, "topk_overlap": 1.0, "first_rollout_s": 0.3086747620254755, "parent": "cache_sdpa_fp16", "max_abs_diff_parent": 0.03302574157714844}, "fp16_unmasked_reuse_compile": {"max_abs_diff": 0.3188197612762451, "mean_abs_diff": 0.00217227335087955, "ref_abs_mean": 1.9284015893936157, "loss_max_abs_diff": 0.004137277603149414, "loss_spread": 1.3721275329589844, "best_candidate_same": true, "topk_overlap": 1.0, "first_rollout_s": 14.57653631316498, "parent": "cache_sdpa_fp16", "max_abs_diff_parent": 0.04540325701236725}, "fp32_within_3x_noise_floor": false}
+Success rate:  1.0
+{'success': array([ True,  True,  True,  True,  True,  True,  True,  True,  True,
+        True,  True,  True,  True,  True,  True,  True]), 'state_dist': array([0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
+      dtype=float32)}
+Success rate:  0.0
+{'success': array([False, False, False, False, False, False, False, False, False,
+       False, False, False, False, False, False, False]), 'state_dist': array([ 76.95057, 165.55856, 399.83334, 195.92244, 265.60156, 248.48555,
+       223.92351, 185.0763 , 150.15778, 164.42686, 144.36809, 139.88492,
+       152.31755, 162.51659, 140.99763,  68.28931], dtype=float32)}
+[fp16_reuse] task   0 plan  14.708s final_cem_loss 0.04585
+[fp16_reuse] task   1 plan  14.741s final_cem_loss 0.06081
+[fp16_reuse] task   2 plan  14.224s final_cem_loss 0.10476
+[fp16_reuse] task   3 plan  10.214s final_cem_loss 0.18276
+[fp16_reuse] task   4 plan  10.280s final_cem_loss 0.11705
+[fp16_reuse] task   5 plan  10.215s final_cem_loss 0.04685
+[fp16_reuse] task   6 plan  13.590s final_cem_loss 0.09978
+[fp16_reuse] task   7 plan  14.832s final_cem_loss 0.05956
+[fp16_reuse] task   8 plan  14.841s final_cem_loss 0.09652
+[fp16_reuse] task   9 plan  14.821s final_cem_loss 0.05678
+[fp16_reuse] task  10 plan  11.953s final_cem_loss 0.08854
+[fp16_reuse] task  11 plan  10.287s final_cem_loss 0.12058
+[fp16_reuse] task  12 plan  10.214s final_cem_loss 0.10251
+[fp16_reuse] task  13 plan  10.128s final_cem_loss 0.09022
+[fp16_reuse] task  14 plan  10.031s final_cem_loss 0.07484
+[fp16_reuse] task  15 plan  10.022s final_cem_loss 0.04690
+Success rate:  0.9375
+{'success': array([ True,  True,  True, False,  True,  True,  True,  True,  True,
+        True,  True,  True,  True,  True,  True,  True]), 'state_dist': array([19.160452, 19.036884, 75.93622 , 33.237072, 35.55447 , 32.01074 ,
+       16.957542, 31.903015, 18.152048, 33.543377, 36.143917, 22.86531 ,
+       28.640314, 18.297665, 21.77447 , 22.796528], dtype=float32)}
+== fp16_reuse: median 11.120s p95 14.834s success 0.94 peak 9402MiB phases {'encode_obs': 0.0004760041984003147, 'predict': 0.9848135025481263, 'objective': 0.0006588434387075784, 'other(sampling,topk,preprocess,act-encode)': 0.014051649814765865}
+[fp16_unmasked_reuse] task   0 plan   9.185s final_cem_loss 0.04585
+[fp16_unmasked_reuse] task   1 plan   9.187s final_cem_loss 0.06162
+[fp16_unmasked_reuse] task   2 plan   9.192s final_cem_loss 0.10708
+[fp16_unmasked_reuse] task   3 plan   9.190s final_cem_loss 0.18245
+[fp16_unmasked_reuse] task   4 plan   9.181s final_cem_loss 0.11776
+[fp16_unmasked_reuse] task   5 plan   9.182s final_cem_loss 0.04684
+[fp16_unmasked_reuse] task   6 plan   9.180s final_cem_loss 0.09979
+[fp16_unmasked_reuse] task   7 plan   9.188s final_cem_loss 0.06389
+[fp16_unmasked_reuse] task   8 plan   9.193s final_cem_loss 0.09636
+[fp16_unmasked_reuse] task   9 plan   9.191s final_cem_loss 0.05825
+[fp16_unmasked_reuse] task  10 plan   9.210s final_cem_loss 0.08853
+[fp16_unmasked_reuse] task  11 plan   9.200s final_cem_loss 0.12055
+[fp16_unmasked_reuse] task  12 plan   9.205s final_cem_loss 0.09583
+[fp16_unmasked_reuse] task  13 plan   9.202s final_cem_loss 0.09024
+[fp16_unmasked_reuse] task  14 plan   9.199s final_cem_loss 0.07483
+[fp16_unmasked_reuse] task  15 plan   9.204s final_cem_loss 0.04420
+Success rate:  1.0
+{'success': array([ True,  True,  True,  True,  True,  True,  True,  True,  True,
+        True,  True,  True,  True,  True,  True,  True]), 'state_dist': array([19.160456, 18.96296 , 75.85926 , 24.18563 , 34.015717, 32.010723,
+       16.957527, 31.03975 , 17.990307, 33.16912 , 36.143917, 22.865324,
+       34.059063, 18.1584  , 21.774466, 18.910295], dtype=float32)}
+== fp16_unmasked_reuse: median 9.192s p95 9.206s success 1.00 peak 9402MiB phases {'encode_obs': 0.00047895168022879075, 'predict': 0.9836474157620269, 'objective': 0.0007126198806961711, 'other(sampling,topk,preprocess,act-encode)': 0.015161012677048148}
+[fp16_unmasked_reuse_compile] task   0 plan   8.133s final_cem_loss 0.04588
+[fp16_unmasked_reuse_compile] task   1 plan   8.146s final_cem_loss 0.06047
+[fp16_unmasked_reuse_compile] task   2 plan   8.142s final_cem_loss 0.10539
+[fp16_unmasked_reuse_compile] task   3 plan   8.146s final_cem_loss 0.18270
+[fp16_unmasked_reuse_compile] task   4 plan   8.142s final_cem_loss 0.11695
+[fp16_unmasked_reuse_compile] task   5 plan   8.147s final_cem_loss 0.04729
+[fp16_unmasked_reuse_compile] task   6 plan   8.137s final_cem_loss 0.09959
+[fp16_unmasked_reuse_compile] task   7 plan   8.146s final_cem_loss 0.06451
+[fp16_unmasked_reuse_compile] task   8 plan   8.134s final_cem_loss 0.09638
+[fp16_unmasked_reuse_compile] task   9 plan   8.142s final_cem_loss 0.05678
+[fp16_unmasked_reuse_compile] task  10 plan   8.133s final_cem_loss 0.08853
+[fp16_unmasked_reuse_compile] task  11 plan   8.129s final_cem_loss 0.12015
+[fp16_unmasked_reuse_compile] task  12 plan   8.134s final_cem_loss 0.09582
+[fp16_unmasked_reuse_compile] task  13 plan   8.127s final_cem_loss 0.08947
+[fp16_unmasked_reuse_compile] task  14 plan   8.125s final_cem_loss 0.07481
+[fp16_unmasked_reuse_compile] task  15 plan   8.129s final_cem_loss 0.04421
+Success rate:  0.9375
+{'success': array([ True,  True,  True, False,  True,  True,  True,  True,  True,
+        True,  True,  True,  True,  True,  True,  True]), 'state_dist': array([19.160456, 18.823992, 76.18091 , 33.237076, 34.524063, 19.640411,
+       19.647486, 36.0334  , 17.990303, 33.5434  , 36.143917, 22.517357,
+       34.059063, 19.99125 , 26.668577, 18.910286], dtype=float32)}
+== fp16_unmasked_reuse_compile: median 8.136s p95 8.147s success 0.94 peak 8910MiB phases {'encode_obs': 0.0007170655989263991, 'predict': 0.9799974816792284, 'objective': 0.0008555901331323551, 'other(sampling,topk,preprocess,act-encode)': 0.01842986258871281}
