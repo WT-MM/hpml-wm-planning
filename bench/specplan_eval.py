@@ -133,28 +133,39 @@ def load_wm_and_tasks(args, device):
 
 
 def parse_method(spec):
-    """Parse method spec: full, few150, online:m45, refg:std, refg:m45, norefg:std, norefg:m45, hybrid:m45."""
+    """Parse method spec:
+      full, few<N>,
+      <kind>:std, <kind>:m<M>, <kind>:m<M0>-<M1>, <kind>:k<K>:m<M>, <kind>:k<K>:m<M0>-<M1>
+    where kind in {'online', 'refg', 'norefg', 'hybrid'}."""
     if spec == "full":
-        return {"name": spec, "kind": "full", "m": None}
+        return {"name": spec, "kind": "full", "N": None, "m": None, "m_sched": None}
     if spec.startswith("few"):
-        return {"name": spec, "kind": "few", "N": int(spec[3:]), "m": None}
-    if ":" in spec:
-        kind, mode = spec.split(":", 1)
-        if kind not in ("online", "refg", "norefg", "hybrid"):
-            raise ValueError(spec)
-        if mode == "std":
-            return {"name": spec, "kind": kind, "m": None}
-        if mode.startswith("m"):
-            return {"name": spec, "kind": kind, "m": int(mode[1:])}
-    raise ValueError(f"unknown method spec: {spec}")
+        return {"name": spec, "kind": "few", "N": int(spec[3:]), "m": None, "m_sched": None}
+    parts = spec.split(":")
+    if len(parts) < 2 or parts[0] not in ("online", "refg", "norefg", "hybrid"):
+        raise ValueError(f"unknown method spec: {spec}")
+    out = {"name": spec, "kind": parts[0], "N": None, "m": None, "m_sched": None}
+    for p in parts[1:]:
+        if p == "std":
+            out["m"] = None
+        elif p.startswith("k"):
+            out["N"] = int(p[1:])
+        elif p.startswith("m") and "-" in p:
+            a, b = p[1:].split("-", 1)
+            out["m"] = int(a)
+            out["m_sched"] = (int(a), int(b))
+        elif p.startswith("m"):
+            out["m"] = int(p[1:])
+        else:
+            raise ValueError(f"unknown method spec token {p!r} in {spec}")
+    return out
 
 
 def plan_one_step(S, var, obs_0_t, zg, ug, parsed, models, args, device, noise_seed, init_mu=None):
     wm = S["wm"]
     H, A = args.horizon, S["action_dim"]
-    N = parsed["N"] if parsed["kind"] == "few" else args.num_samples
+    N = parsed["N"] if parsed["N"] is not None else args.num_samples
     topk = max(2, min(N - 1, round(args.topk * N / args.num_samples))) if parsed["kind"] == "few" else args.topk
-    m_ver = parsed["m"]
 
     var.new_plan()
     with torch.no_grad():
@@ -172,6 +183,17 @@ def plan_one_step(S, var, obs_0_t, zg, ug, parsed, models, args, device, noise_s
         U = smod.pack_latent(zo["visual"][:, -1], zo["proprio"][:, -1])
         return U, zo["visual"][:, -1], zo["proprio"][:, -1]
 
+    def verify_excluding_ref(action, draft_loss, m_ver, loss_ref):
+        """Always preserve exact mu (index 0) for free and verify top m_ver non-reference candidates."""
+        non_ref = draft_loss[1:]
+        cand = torch.argsort(non_ref)[:min(m_ver, len(non_ref))] + 1
+        U_ver, _, _ = rollout_packed(action[cand])
+        loss_ver = ((U_ver - ug[None]) ** 2).sum(dim=-1)
+        loss = torch.full((len(action),), float("inf"), device=device)
+        loss[0] = loss_ref
+        loss[cand] = loss_ver
+        return loss, cand, U_ver
+
     torch.manual_seed(noise_seed)
     mu = torch.zeros(H, A, device=device) if init_mu is None else init_mu.clone()
     sigma = torch.ones(H, A, device=device)
@@ -183,6 +205,11 @@ def plan_one_step(S, var, obs_0_t, zg, ug, parsed, models, args, device, noise_s
         action[0] = mu
         act_flat = action.reshape(N, H * A)
         kind = parsed["kind"]
+        if parsed["m_sched"] is not None:
+            m0, m1 = parsed["m_sched"]
+            m_ver = m0 if it < args.opt_steps // 3 else m1
+        else:
+            m_ver = parsed["m"]
 
         if kind in ("full", "few"):
             U, _, _ = rollout_packed(action)
@@ -190,28 +217,27 @@ def plan_one_step(S, var, obs_0_t, zg, ug, parsed, models, args, device, noise_s
             loss = ((U - ug[None]) ** 2).sum(dim=-1)
         elif kind == "online":
             if len(ridge) == 0:
-                # Cold start: iter 0 runs full model once to seed verified history with exact pairs
-                U, _, _ = rollout_packed(action)
-                full_evals += N
-                loss = ((U - ug[None]) ** 2).sum(dim=-1)
-                top_seed = torch.argsort(loss)[:min(max(m_ver, 60), N)]
+                # Cold start: iter 0 runs full model on base num_samples (or N if smaller) to seed verified buffer
+                n_seed = min(N, args.num_samples)
+                U, _, _ = rollout_packed(action[:n_seed])
+                full_evals += n_seed
+                l_seed = ((U - ug[None]) ** 2).sum(dim=-1)
+                loss = torch.full((N,), float("inf"), device=device)
+                loss[:n_seed] = l_seed
+                top_seed = torch.argsort(l_seed)[:min(max(m_ver, 60), n_seed)]
                 ridge.update(act_flat[top_seed], U[top_seed])
             else:
-                # Reference rollout (B=1) + <0.5ms GPU online-ridge draft + top-m verification
                 U_ref, _, _ = rollout_packed(mu[None])
                 full_evals += 1
+                loss_ref = ((U_ref[0] - ug) ** 2).sum()
                 draft_loss = ridge.score_online(mu.reshape(-1), U_ref[0], ug, act_flat)
-                cand = torch.argsort(draft_loss)[:m_ver]
-                # Ensure reference (idx 0) isn't duplicated unnecessarily; verify top-m
-                U_ver, _, _ = rollout_packed(action[cand])
+                loss, cand, U_ver = verify_excluding_ref(action, draft_loss, m_ver, loss_ref)
                 full_evals += len(cand)
-                loss_ver = ((U_ver - ug[None]) ** 2).sum(dim=-1)
                 ridge.update(act_flat[cand], U_ver)
-                loss = torch.full((N,), float("inf"), device=device)
-                loss[cand] = loss_ver
         elif kind in ("refg", "hybrid"):
             U_ref, zref_v, zref_p = rollout_packed(mu[None])
             full_evals += 1
+            loss_ref = ((U_ref[0] - ug) ** 2).sum()
             with torch.no_grad():
                 if kind == "refg":
                     draft_loss, _, _ = models["refg"].score_candidates(z0_vis, z0_prop, zref_v, zref_p, mu.reshape(1, -1), ug, act_flat)
@@ -219,15 +245,12 @@ def plan_one_step(S, var, obs_0_t, zg, ug, parsed, models, args, device, noise_s
                     draft_loss = ridge.score_hybrid(models["refg"], z0_vis, z0_prop, zref_v, zref_p, mu.reshape(-1), ug, act_flat)
             if m_ver is None:
                 loss = draft_loss
+                loss[0] = loss_ref
             else:
-                cand = torch.argsort(draft_loss)[:m_ver]
-                U_ver, _, _ = rollout_packed(action[cand])
+                loss, cand, U_ver = verify_excluding_ref(action, draft_loss, m_ver, loss_ref)
                 full_evals += len(cand)
-                loss_ver = ((U_ver - ug[None]) ** 2).sum(dim=-1)
                 if kind == "hybrid":
                     ridge.update(act_flat[cand], U_ver)
-                loss = torch.full((N,), float("inf"), device=device)
-                loss[cand] = loss_ver
         elif kind == "norefg":
             with torch.no_grad():
                 draft_loss, _, _ = models["norefg"].score_candidates(z0_vis, z0_prop, ug, act_flat)

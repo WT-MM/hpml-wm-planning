@@ -17,6 +17,16 @@ def pack_latent(vis, prop, alpha=1.0):
     return torch.cat([v / math.sqrt(v.shape[-1]), p * math.sqrt(alpha / p.shape[-1])], dim=-1)
 
 
+def _fast_gram_and_proj(B, r_g):
+    """Compute M = B @ B.T and b = B @ r_g using bf16 Tensor Cores on CUDA (fp32 on CPU)."""
+    if B.is_cuda:
+        Bb = B.to(torch.bfloat16)
+        M = (Bb @ Bb.T).float()
+        b = (Bb @ r_g.to(torch.bfloat16)).float()
+        return M, b
+    return B @ B.T, B @ r_g
+
+
 def quad_mse_from_gram(r_norm2, M, b, C):
     """Exact MSE ||r_g + C @ B||_2^2 given r_norm2 (scalar), M = B @ B.T (R, R),
     b = B @ r_g (R,), and C (K, R)."""
@@ -170,8 +180,7 @@ class RefBasisG(nn.Module):
         B0 = basis[0]                                           # (R, D_tot)
         u_ref = pack_latent(zref_vis[0], zref_prop[0], self.alpha)
         r_g = u_ref - ug
-        M = B0 @ B0.T
-        b = B0 @ r_g
+        M, b = _fast_gram_and_proj(B0, r_g)
         r_n2 = (r_g * r_g).sum()
         dA = (actions - mu).unsqueeze(0)                        # (1, K, d_a)
         C = self.candidate_coeffs(ctx, W, dA)[0]                # (K, R)
@@ -218,8 +227,7 @@ class NoRefBasisG(nn.Module):
         B0 = basis[0]
         u0 = pack_latent(z0_vis[0], z0_prop[0], self.alpha)
         r_g = u0 - ug
-        M = B0 @ B0.T
-        b = B0 @ r_g
+        M, b = _fast_gram_and_proj(B0, r_g)
         r_n2 = (r_g * r_g).sum()
         C = self.candidate_coeffs(ctx, W, actions.unsqueeze(0))[0]
         return quad_mse_from_gram(r_n2, M, b, C), B0, C
@@ -266,8 +274,7 @@ class OnlineRidgeBuffer:
         W_ev = self._dual_weights(A_tr, mu.float(), actions_flat.float())
         Y_tr = U_tr - u_ref[None]
         r_g = u_ref - ug
-        M = Y_tr @ Y_tr.T
-        b = Y_tr @ r_g
+        M, b = _fast_gram_and_proj(Y_tr, r_g)
         r_n2 = (r_g * r_g).sum()
         return quad_mse_from_gram(r_n2, M, b, W_ev)
 
@@ -282,7 +289,8 @@ class OnlineRidgeBuffer:
         C_ev = model_g.candidate_coeffs(ctx, W_lin, dA_ev)[0]
 
         if not self.hist_a:
-            return quad_mse_from_gram(r_n2, B_g @ B_g.T, B_g @ r_g, C_ev)
+            M, b = _fast_gram_and_proj(B_g, r_g)
+            return quad_mse_from_gram(r_n2, M, b, C_ev)
 
         A_tr = torch.cat(self.hist_a, dim=0)
         U_tr = torch.cat(self.hist_u, dim=0)
@@ -293,4 +301,5 @@ class OnlineRidgeBuffer:
 
         B_cat = torch.cat([B_g, Y_tr], dim=0)
         C_cat = torch.cat([C_ev - W_ev @ C_tr, W_ev], dim=1)
-        return quad_mse_from_gram(r_n2, B_cat @ B_cat.T, B_cat @ r_g, C_cat)
+        M, b = _fast_gram_and_proj(B_cat, r_g)
+        return quad_mse_from_gram(r_n2, M, b, C_cat)
