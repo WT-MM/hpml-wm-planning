@@ -51,7 +51,6 @@ def load_train_wm(args, device):
 
 def main():
     import torch
-    from utils import move_to_device
     import planbench as pb
 
     ap = argparse.ArgumentParser()
@@ -78,6 +77,7 @@ def main():
     out.mkdir(parents=True, exist_ok=True)
     device = torch.device(args.device)
     S = load_train_wm(args, device)
+    from utils import move_to_device
     wm, d_tr, pre, sim, fs = S["wm"], S["d_tr"], S["pre"], S["sim"], S["fs"]
     H, A, N, topk, steps = args.horizon, S["action_dim"], args.num_samples, args.topk, args.opt_steps
     sample_iters = sorted({int(x) for x in args.sample_iters.split(",") if 0 <= int(x) < steps})

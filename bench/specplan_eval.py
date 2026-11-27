@@ -254,7 +254,6 @@ def main():
     import planbench as pb
     import mpc_utils as mu_util
     from einops import rearrange
-    from utils import move_to_device
 
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", required=True)
@@ -288,6 +287,7 @@ def main():
     out.mkdir(parents=True, exist_ok=True)
     device = torch.device(args.device)
     S = load_wm_and_tasks(args, device)
+    from utils import move_to_device
     models = {
         "refg": load_ckpt(args.refg_ckpt, device),
         "norefg": load_ckpt(args.norefg_ckpt, device),
