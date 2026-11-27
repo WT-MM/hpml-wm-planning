@@ -324,6 +324,8 @@ def main():
             raise ValueError(f"{m['name']} requires --norefg-ckpt")
 
     variant = args.base_variant if device.type == "cuda" else "cache_sdpa_reuse"
+    if "compile" in variant:
+        torch._dynamo.config.cache_size_limit = 64
     seeds = [int(s) for s in args.seeds.split(",")]
     R = {"args": vars(args), "gpu": torch.cuda.get_device_name(device) if device.type == "cuda" else "cpu",
          "runs": {m["name"]: [] for m in methods}}

@@ -16,12 +16,14 @@ sys.path.insert(0, str(Path(__file__).parent))
 import specplan_models as smod
 
 
-def load_dataset(data_dir, dev_frac=0.1, seed=0):
-    data_dir = Path(data_dir)
-    manifest = json.loads((data_dir / "manifest.json").read_text())
-    records = []
-    for sh in manifest["shards"]:
-        records.extend(torch.load(data_dir / sh["file"], map_location="cpu", weights_only=False))
+def load_dataset(data_dirs, dev_frac=0.1, seed=0):
+    records, manifests = [], []
+    for d in str(data_dirs).split(","):
+        data_dir = Path(d.strip())
+        manifest = json.loads((data_dir / "manifest.json").read_text())
+        manifests.append(manifest)
+        for sh in manifest["shards"]:
+            records.extend(torch.load(data_dir / sh["file"], map_location="cpu", weights_only=False))
     eps = sorted({int(r["episode"]) for r in records})
     rng = random.Random(seed)
     rng.shuffle(eps)
@@ -29,7 +31,7 @@ def load_dataset(data_dir, dev_frac=0.1, seed=0):
     dev_eps = set(eps[:n_dev])
     train_recs = [r for r in records if int(r["episode"]) not in dev_eps]
     dev_recs = [r for r in records if int(r["episode"]) in dev_eps] or train_recs[:min(8, len(train_recs))]
-    return train_recs, dev_recs, manifest
+    return train_recs, dev_recs, manifests
 
 
 def collate_batch(recs, device):
