@@ -294,6 +294,7 @@ def main():
     ap.add_argument("--n-taken", type=int, default=2)
     ap.add_argument("--mpc-steps", type=int, default=5)
     ap.add_argument("--warm-start", action=argparse.BooleanOptionalAction, default=True)
+    ap.add_argument("--early-stop", action="store_true")
     ap.add_argument("--num-samples", type=int, default=300)
     ap.add_argument("--topk", type=int, default=30)
     ap.add_argument("--opt-steps", type=int, default=30)
@@ -377,6 +378,8 @@ def main():
                         obses, _, _, infos = sim.step_multiple(raw)
                         cur_state = infos["state"][-1]
                         cur_obs = {k: np.expand_dims(v[-1], (0, 1)) for k, v in obses.items()}
+                        if args.early_stop and sim.eval_state(t["state_g"], cur_state)["success"]:
+                            break
                     ev = sim.eval_state(t["state_g"], cur_state)
                     return {
                         "episode_plan_s": float(sum(step_lats)), "step_plan_s": step_lats,
