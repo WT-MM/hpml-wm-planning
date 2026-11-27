@@ -197,7 +197,8 @@ def run_planner_on_seed(S, tasks, spec, args, device, seed):
 
     def run_episode(t, task_idx):
         sim.update_env(t["env_info"])
-        cur_obs, cur_state = t["obs_0"], t["state_0"]
+        o0_raw, cur_state = sim.prepare(t["eval_seed"], t["state_0"])
+        cur_obs = {k: np.expand_dims(v, (0, 1)) for k, v in o0_raw.items()}
         with torch.no_grad():
             zg = wm.encode_obs(move_to_device(tr(t["obs_g"]), device))
         memo = None
@@ -227,8 +228,8 @@ def run_planner_on_seed(S, tasks, spec, args, device, seed):
             taken = mu[:args.n_taken].detach()
             memo = mu[args.n_taken:].detach()
             exec_raw = pre.denormalize_actions(rearrange(taken.cpu(), "h (f d) -> (h f) d", f=fs)).numpy()
-            obses, states = sim.rollout(t["eval_seed"], cur_state, exec_raw)
-            cur_state = states[-1]
+            obses, _, _, infos = sim.step_multiple(exec_raw)
+            cur_state = infos["state"][-1]
             cur_obs = {k: np.expand_dims(v[-1], (0, 1)) for k, v in obses.items()}
             ev = sim.eval_state(t["state_g"], cur_state)
             if ev["success"] and solved_step is None:
@@ -285,7 +286,8 @@ def run_planner_on_seed(S, tasks, spec, args, device, seed):
 
 
 def selfcheck_sim_incremental(S, task):
-    """Runnable check: incremental simulator rollout from cur_state matches full rollout from init_state."""
+    """Runnable check: live sim.prepare + step_multiple chunks match full sim.rollout bit-for-bit
+    (preserving hidden pymunk velocities across MPC steps)."""
     from einops import rearrange
     sim, pre, fs = S["sim"], S["pre"], S["fs"]
     sim.update_env(task["env_info"])
@@ -296,10 +298,11 @@ def selfcheck_sim_incremental(S, task):
         raw = rng.normal(0.0, 0.2, size=(fs * 2, 2)).astype(np.float32)
     _, full_states = sim.rollout(task["eval_seed"], task["state_0"], raw)
     mid = fs
-    _, s1 = sim.rollout(task["eval_seed"], task["state_0"], raw[:mid])
-    _, s2 = sim.rollout(task["eval_seed"], s1[-1], raw[mid:])
-    diff = float(np.max(np.abs(full_states[-1] - s2[-1])))
-    assert diff < 1e-3, f"incremental simulator state mismatch: {diff}"
+    sim.prepare(task["eval_seed"], task["state_0"])
+    _, _, _, info1 = sim.step_multiple(raw[:mid])
+    _, _, _, info2 = sim.step_multiple(raw[mid:])
+    diff = float(np.max(np.abs(full_states[-1] - info2["state"][-1])))
+    assert diff < 1e-5, f"incremental simulator state mismatch: {diff}"
     return {"sim_incremental_max_state_diff": diff}
 
 
