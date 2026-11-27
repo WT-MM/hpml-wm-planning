@@ -187,7 +187,7 @@ def main():
     ap.add_argument("--opt-steps", type=int, default=30)
     ap.add_argument("--seed", type=int, default=99)
     ap.add_argument("--warmup", type=int, default=1)
-    ap.add_argument("--n-plot", type=int, default=0)
+    ap.add_argument("--n-plot", type=int, default=1)
     ap.add_argument("--eval-mode", action="store_true")
     args = ap.parse_args()
     run_benchmark(args)
