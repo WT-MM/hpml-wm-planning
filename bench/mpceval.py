@@ -166,6 +166,9 @@ def plan_gd_step(S, var, obs_0_t, zg, args, device, noise_seed, init_mu=None):
     act = act.detach().clone().requires_grad_(True)
     obs_rep = {k: v.expand(B, *v.shape[1:]) for k, v in obs_0_t.items()}
     zg_rep = {k: v.expand(B, *v.shape[1:]).detach() for k, v in zg.items()}
+    if var.cache:  # populate start-frame cache detached so backward doesn't retain encoder graph across GD steps
+        with torch.no_grad():
+            var.z_cache["z"] = wm.encode_obs(obs_0_t)
     opt = torch.optim.Adam([act], lr=args.gd_lr) if args.gd_opt == "adam" else torch.optim.SGD([act], lr=args.gd_lr)
 
     best_loss = None
