@@ -1,0 +1,44 @@
+Gym has been unmaintained since 2022 and does not support NumPy 2.0 amongst other critical functionality.
+Please upgrade to Gymnasium, the maintained drop-in replacement of Gym, or contact the authors of your software and request that they upgrade.
+See the migration guide at https://gymnasium.farama.org/introduction/migration_guide/ for additional information.
+$HPML_W/dino_wm/custom_resolvers.py:4: UserWarning: 
+The version_base parameter is not specified.
+Please specify a compatability version level, or None.
+Will assume defaults for version 1.1
+  @hydra.main(config_path=None)
+Loaded 18685 rollouts
+Loaded 21 rollouts
+Resuming from epoch 2: $HPML_W/ckpt/outputs/pusht/checkpoints/model_latest.pth
+Using cache found in $HPML_W/cache/torch/hub/facebookresearch_dinov2_main
+num_action_repeat: 1
+num_proprio_repeat: 1
+proprio encoder: ProprioceptiveEmbedding(
+  (patch_embed): Conv1d(4, 10, kernel_size=(1,), stride=(1,))
+)
+action encoder: ProprioceptiveEmbedding(
+  (patch_embed): Conv1d(10, 10, kernel_size=(1,), stride=(1,))
+)
+proprio_dim: 10, after repeat: 10
+action_dim: 10, after repeat: 10
+emb_dim: 404
+Model emb_dim:  404
+W1127 07:57:23.311000 2 torch/_dynamo/convert_frame.py:2061] [0/8] torch._dynamo hit config.recompile_limit (8)
+W1127 07:57:23.311000 2 torch/_dynamo/convert_frame.py:2061] [0/8]    function: '_grow' ($HPML_W/code/bench/planbench.py:121)
+W1127 07:57:23.311000 2 torch/_dynamo/convert_frame.py:2061] [0/8]    last reason: 0/7: tensor 'kv[0][0]' size mismatch at index 2. expected 196, actual 392
+W1127 07:57:23.311000 2 torch/_dynamo/convert_frame.py:2061] [0/8] To log all recompilation reasons, use TORCH_LOGS="recompiles".
+W1127 07:57:23.311000 2 torch/_dynamo/convert_frame.py:2061] [0/8] To diagnose recompilation issues, see https://docs.pytorch.org/docs/main/user_guide/torch_compiler/compile/programming_model.recompilation.html
+selfcheck 1gpu_vs_mgpu max_action_diff=1.624e+00
+Success rate:  0.9375
+{'success': array([ True,  True,  True, False,  True,  True,  True,  True,  True,
+        True,  True,  True,  True,  True,  True,  True]), 'state_dist': array([19.160456, 18.823992, 76.18091 , 33.237076, 34.524063, 19.640411,
+       19.647486, 36.0334  , 17.990303, 33.5434  , 36.143917, 22.517357,
+       34.059063, 19.99125 , 26.668577, 18.910286], dtype=float32)}
+[1gpu] median=7.900s p95=7.910s succ=0.938 peak_mb=[8858, 207]
+Success rate:  1.0
+{'success': array([ True,  True,  True,  True,  True,  True,  True,  True,  True,
+        True,  True,  True,  True,  True,  True,  True]), 'state_dist': array([12.935426 , 15.182671 , 53.403362 , 25.580227 , 34.313847 ,
+       31.59485  , 12.72508  , 37.495625 , 21.544563 , 21.607176 ,
+       41.204597 , 15.3081665, 33.329224 , 22.291739 , 26.57647  ,
+       17.997246 ], dtype=float32)}
+[2gpu] median=3.980s p95=4.017s succ=1.000 peak_mb=[5618, 4516]
+==> 2gpu vs 1gpu speedup: 1.98x

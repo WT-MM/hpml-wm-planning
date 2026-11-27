@@ -26,17 +26,20 @@ import torch.nn.functional as F
 
 W = Path(os.environ["HPML_W"])  # folder holding dino_wm/, ckpt/outputs/, data/pusht_noise/
 DINO_WM = W / "dino_wm"
-OPTS = dict(cache=False, sdpa=False, amp=None, tf32=False, compile=False, reuse=False)
+OPTS = dict(cache=False, sdpa=False, amp=None, tf32=False, compile=False, reuse=False, unmasked=False)
 VARIANTS = {  # name -> options that differ from OPTS
     "official": {},
     "cache": dict(cache=True),
     "cache_sdpa": dict(cache=True, sdpa=True),
     "cache_sdpa_tf32": dict(cache=True, sdpa=True, tf32=True),
     "cache_sdpa_reuse": dict(cache=True, sdpa=True, reuse=True),
+    "cache_sdpa_unmasked_reuse": dict(cache=True, sdpa=True, reuse=True, unmasked=True),
     "cache_sdpa_fp16": dict(cache=True, sdpa=True, amp=torch.float16),
     "fp16_compile": dict(cache=True, sdpa=True, amp=torch.float16, compile=True),
     "fp16_reuse": dict(cache=True, sdpa=True, amp=torch.float16, reuse=True),
     "fp16_reuse_compile": dict(cache=True, sdpa=True, amp=torch.float16, reuse=True, compile=True),
+    "fp16_unmasked_reuse": dict(cache=True, sdpa=True, amp=torch.float16, reuse=True, unmasked=True),
+    "fp16_unmasked_reuse_compile": dict(cache=True, sdpa=True, amp=torch.float16, reuse=True, unmasked=True, compile=True),
 }
 DEFAULT = "official,cache,cache_sdpa,cache_sdpa_fp16"
 
@@ -143,9 +146,31 @@ class ReusePredict:
         return out[:, None, -P:]
 
 
+class UnmaskedReusePredict(ReusePredict):
+    """ReusePredict with per-frame unmasked SDPA calls in _slide (attn_mask=None).
+    Avoids 1/3 of attention FLOPs and lets PyTorch select FlashAttention instead of memory-efficient attention."""
+    def _slide(self, x, mask, P):
+        n_frames = x.shape[1] // P
+        for attn, ff in self.layers[:-1]:
+            q, k, v = self._qkv(attn, x)
+            dp = attn.dropout.p if attn.training else 0.0
+            o = torch.cat([
+                F.scaled_dot_product_attention(
+                    q[:, :, f * P:(f + 1) * P], k[:, :, :(f + 1) * P], v[:, :, :(f + 1) * P],
+                    attn_mask=None, dropout_p=dp,
+                )
+                for f in range(n_frames)
+            ], dim=2)
+            x = attn.to_out(o.transpose(1, 2).reshape(x.shape[0], x.shape[1], -1)) + x
+            x = ff(x) + x
+        attn, ff = self.layers[-1]
+        q, k, v = self._qkv(attn, x)
+        return self.pred.transformer.norm(self._layer(attn, ff, x[:, -P:], q[:, :, -P:], k, v, None))
+
+
 class Variant:
     """Context manager that applies a variant to the world model for the duration of a plan."""
-    _reuse = {}  # compile flag -> ReusePredict, kept so that compiled code is reused across Variant instances
+    _reuse = {}  # (compile, unmasked) -> ReusePredict, kept so compiled code is reused across Variant instances
 
     def __init__(self, wm, name):
         self.wm, self.o = wm, {**OPTS, **VARIANTS[name]}
@@ -166,10 +191,11 @@ class Variant:
         before = lambda: None
         if self.o["reuse"]:
             assert self.cache and self.sdpa, "reuse builds on cache + sdpa"
-            c = self.o["compile"]
-            if c not in Variant._reuse:
-                Variant._reuse[c] = ReusePredict(self.wm, c)
-            self.wm.predict = Variant._reuse[c]; before = self.wm.predict.reset  # instance attribute shadows the method
+            key = (self.o["compile"], self.o["unmasked"])
+            if key not in Variant._reuse:
+                cls = UnmaskedReusePredict if self.o["unmasked"] else ReusePredict
+                Variant._reuse[key] = cls(self.wm, self.o["compile"])
+            self.wm.predict = Variant._reuse[key]; before = self.wm.predict.reset  # instance attribute shadows the method
         elif self.o["compile"]:
             self._pred = self.wm.predictor
             if not hasattr(self._pred, "_compiled"):
