@@ -158,17 +158,102 @@ def plot_pareto_figure(eval32_v1, eval32_v2, out_png):
     plt.close(fig)
 
 
+def plot_mpc_final_figure(mpc_json, out_png):
+    S = json.loads(Path(mpc_json).read_text())["summary"]
+    rows = [
+        ("Full CEM (K=300)", S["full"], GRAY, "o"),
+        ("Few-150 (K=150)", S["few150"], GRAY, "s"),
+        ("NoRef-G D&V (m=60)", S["norefg:m60"], ORANGE, "D"),
+        ("Online Ridge (K=1000, m=60)", S["online:k1000:m60"], TEAL, "s"),
+        ("Ref-G D&V (m=60)", S["refg:m60"], BLUE_LIGHT, "o"),
+        ("Hybrid (K=1000, m=90-45)", S["hybrid:k1000:m90-45"], BLUE_DARK, "*"),
+    ]
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11.4, 4.75))
+    fig.subplots_adjust(left=0.07, right=0.97, top=0.89, bottom=0.25, wspace=0.28)
+
+    # Panel A: Mean final state distance (lower is better) vs median episode latency (s)
+    for label, s, col, mk in rows:
+        ms = 11 if mk == "*" else 6.5
+        x, y = s["episode_median_s"], s["mean_final_state_dist"]
+        ax1.scatter(x, y, c=col, marker=mk, s=ms**2, zorder=3, edgecolors="white", linewidths=0.7)
+        ha, dx, dy = "left", 0.35, 0.0
+        if "Full" in label:
+            ha, dx, dy = "right", -0.25, 1.3
+        elif "Few-150" in label:
+            dx, dy = 0.35, -0.3
+        elif "NoRef" in label:
+            dx, dy = 0.35, 0.6
+        elif "Online" in label:
+            dx, dy = 0.35, 1.0
+        elif "Ref-G" in label:
+            dx, dy = 0.35, -0.9
+        elif "Hybrid" in label:
+            dx, dy = 0.35, -1.0
+        ax1.text(x + dx, y + dy, label, fontsize=8.5, color=INK2, va="center", ha=ha)
+    ax1.axhline(S["full"]["mean_final_state_dist"], color=AXIS, ls="--", lw=0.9)
+    ax1.set_xlabel("Median closed-loop episode plan latency (s), lower is better")
+    ax1.set_ylabel("Mean final state distance to goal, lower is better")
+    ax1.set_xlim(1.5, 18.0)
+    ax1.set_ylim(54.5, 71.5)
+    ax1.grid(axis="y", color=GRID, lw=0.7)
+    ax1.set_axisbelow(True)
+    ax1.set_title("Closed-loop MPC state distance against latency (600 paired episodes)", fontsize=10, color=MUTED, loc="left", pad=8)
+
+    # Panel B: Closed-loop task success rate (% +/- 1 seed std) vs peak GPU memory (GiB)
+    for label, s, col, mk in rows:
+        ms = 11 if mk == "*" else 6.5
+        x = s["peak_mem_alloc_mb"] / 1024.0
+        y = 100.0 * s["success_rate"]
+        yerr = 100.0 * s["success_rate_seed_std"]
+        ax2.errorbar(x, y, yerr=yerr, fmt="none", ecolor=col, elinewidth=1.2, capsize=3, alpha=0.75, zorder=2)
+        ax2.scatter(x, y, c=col, marker=mk, s=ms**2, zorder=3, edgecolors="white", linewidths=0.7)
+        ha, dx, dy = "left", 0.22, 0.0
+        if "Full" in label:
+            ha, dx, dy = "right", -0.18, 2.1
+        elif "Online" in label:
+            ha, dx, dy = "right", -0.18, -2.0
+        elif "Few-150" in label:
+            dx, dy = 0.24, 1.0
+        elif "NoRef" in label:
+            dx, dy = 0.24, -1.6
+        elif "Ref-G" in label:
+            dx, dy = 0.24, -1.7
+        elif "Hybrid" in label:
+            dx, dy = -1.25, 3.6
+        ax2.text(x + dx, y + dy, label, fontsize=8.5, color=INK2, va="center", ha=ha)
+    ax2.set_xlabel("Peak GPU memory allocated (GiB), lower is better")
+    ax2.set_ylabel("Closed-loop task success rate (%), higher is better")
+    ax2.set_xlim(1.0, 9.8)
+    ax2.set_ylim(28, 55)
+    ax2.grid(axis="y", color=GRID, lw=0.7)
+    ax2.set_axisbelow(True)
+    ax2.set_title("Closed-loop MPC success (+/- 1 seed std) vs. peak GPU memory", fontsize=9.8, color=MUTED, loc="left", pad=8)
+
+    fig.text(
+        0.07, 0.03,
+        "3 seeds x 200 paired held-out PushT closed-loop MPC episodes (600/method; goal-H=10, H=5, n-taken=5, mpc-steps=2, compiled FlashAttention+KV, RTX 5090).\n"
+        "Reference conditioning adds +6.5 pp success at equal cost (Ref-G 42.7% vs NoRef-G 36.2%); Hybrid reaches 4.80x speedup, 3.27x less VRAM, and beats Few-150 in state distance.",
+        fontsize=8.2, color=MUTED, va="bottom", linespacing=1.35,
+    )
+    fig.savefig(out_png)
+    plt.close(fig)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--probe-json", required=True)
     ap.add_argument("--eval-v1", required=True)
     ap.add_argument("--eval-v2", required=True)
+    ap.add_argument("--mpc-final", default=None)
     ap.add_argument("--out-dir", required=True)
     args = ap.parse_args()
     out = Path(args.out_dir)
     out.mkdir(parents=True, exist_ok=True)
     plot_probe_figure(args.probe_json, out / "fig_probe_rank.png")
     plot_pareto_figure(args.eval_v1, args.eval_v2, out / "fig_specplan_pareto.png")
+    if args.mpc_final:
+        plot_mpc_final_figure(args.mpc_final, out / "fig_mpc_final_600.png")
     print(f"Wrote figures to {out}")
 
 
