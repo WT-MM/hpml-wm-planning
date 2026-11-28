@@ -1,0 +1,51 @@
+Gym has been unmaintained since 2022 and does not support NumPy 2.0 amongst other critical functionality.
+Please upgrade to Gymnasium, the maintained drop-in replacement of Gym, or contact the authors of your software and request that they upgrade.
+See the migration guide at https://gymnasium.farama.org/introduction/migration_guide/ for additional information.
+$HPML_W/dino_wm/custom_resolvers.py:4: UserWarning: 
+The version_base parameter is not specified.
+Please specify a compatability version level, or None.
+Will assume defaults for version 1.1
+  @hydra.main(config_path=None)
+Loaded 18685 rollouts
+Loaded 21 rollouts
+Resuming from epoch 2: $HPML_W/ckpt/outputs/pusht/checkpoints/model_latest.pth
+Using cache found in $HPML_W/cache/torch/hub/facebookresearch_dinov2_main
+num_action_repeat: 1
+num_proprio_repeat: 1
+proprio encoder: ProprioceptiveEmbedding(
+  (patch_embed): Conv1d(4, 10, kernel_size=(1,), stride=(1,))
+)
+action encoder: ProprioceptiveEmbedding(
+  (patch_embed): Conv1d(10, 10, kernel_size=(1,), stride=(1,))
+)
+proprio_dim: 10, after repeat: 10
+action_dim: 10, after repeat: 10
+emb_dim: 404
+Model emb_dim:  404
+[full seed=99] ep_med=16.164s succ=0.485 dist=54.0 obj=0.3458
+[few150 seed=99] ep_med=7.988s succ=0.470 dist=58.8 obj=0.3535
+[online:k1000:m60 seed=99] ep_med=3.789s succ=0.425 dist=60.7 obj=0.4073
+[norefg:m60 seed=99] ep_med=3.167s succ=0.425 dist=64.1 obj=0.4620
+[refg:m60 seed=99] ep_med=3.387s succ=0.430 dist=61.3 obj=0.4412
+[hybrid:k1000:m90-45 seed=99] ep_med=3.382s succ=0.460 dist=57.7 obj=0.3664
+[full seed=100] ep_med=16.114s succ=0.515 dist=58.2 obj=0.3560
+[few150 seed=100] ep_med=7.993s succ=0.485 dist=62.1 obj=0.3758
+[online:k1000:m60 seed=100] ep_med=3.720s succ=0.425 dist=66.5 obj=0.4322
+[norefg:m60 seed=100] ep_med=3.133s succ=0.345 dist=71.6 obj=0.5142
+[refg:m60 seed=100] ep_med=3.308s succ=0.415 dist=64.3 obj=0.4686
+[hybrid:k1000:m90-45 seed=100] ep_med=3.320s succ=0.440 dist=60.3 obj=0.4013
+[full seed=101] ep_med=16.237s succ=0.465 dist=59.5 obj=0.3568
+[few150 seed=101] ep_med=8.000s succ=0.445 dist=65.0 obj=0.3731
+[online:k1000:m60 seed=101] ep_med=3.717s succ=0.395 dist=64.3 obj=0.4083
+[norefg:m60 seed=101] ep_med=3.129s succ=0.315 dist=69.5 obj=0.4964
+[refg:m60 seed=101] ep_med=3.291s succ=0.435 dist=65.0 obj=0.4342
+[hybrid:k1000:m90-45 seed=101] ep_med=3.300s succ=0.430 dist=63.1 obj=0.3890
+
+| method | ep median (s) | step median / p95 (s) | speedup [95% CI] | peak MiB | success | state dist |
+|---|---|---|---|---|---|---|
+| full | 16.160 | 8.123 / 9.044 | 1.00x [1.00, 1.00] | 9040 | 0.488 | 57.3 |
+| few150 | 7.994 | 4.004 / 4.363 | 1.95x [1.86, 2.02] | 4640 | 0.467 | 61.9 |
+| online:k1000:m60 | 3.719 | 1.863 / 1.939 | 4.23x [4.16, 4.30] | 8410 | 0.415 | 63.8 |
+| norefg:m60 | 3.131 | 1.568 / 1.621 | 4.63x [4.35, 4.88] | 1917 | 0.362 | 68.4 |
+| refg:m60 | 3.294 | 1.657 / 1.759 | 4.72x [4.64, 4.81] | 1920 | 0.427 | 63.5 |
+| hybrid:k1000:m90-45 | 3.303 | 1.662 / 1.804 | 4.80x [4.73, 4.87] | 2762 | 0.443 | 60.4 |

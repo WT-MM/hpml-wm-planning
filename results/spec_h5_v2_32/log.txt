@@ -1,0 +1,47 @@
+Gym has been unmaintained since 2022 and does not support NumPy 2.0 amongst other critical functionality.
+Please upgrade to Gymnasium, the maintained drop-in replacement of Gym, or contact the authors of your software and request that they upgrade.
+See the migration guide at https://gymnasium.farama.org/introduction/migration_guide/ for additional information.
+$HPML_W/dino_wm/custom_resolvers.py:4: UserWarning: 
+The version_base parameter is not specified.
+Please specify a compatability version level, or None.
+Will assume defaults for version 1.1
+  @hydra.main(config_path=None)
+Loaded 18685 rollouts
+Loaded 21 rollouts
+Resuming from epoch 2: $HPML_W/ckpt/outputs/pusht/checkpoints/model_latest.pth
+Using cache found in $HPML_W/cache/torch/hub/facebookresearch_dinov2_main
+num_action_repeat: 1
+num_proprio_repeat: 1
+proprio encoder: ProprioceptiveEmbedding(
+  (patch_embed): Conv1d(4, 10, kernel_size=(1,), stride=(1,))
+)
+action encoder: ProprioceptiveEmbedding(
+  (patch_embed): Conv1d(10, 10, kernel_size=(1,), stride=(1,))
+)
+proprio_dim: 10, after repeat: 10
+action_dim: 10, after repeat: 10
+emb_dim: 404
+Model emb_dim:  404
+[full seed=99] ep_med=9.204s succ=0.812 dist=29.9 obj=0.1126
+[few150 seed=99] ep_med=4.539s succ=0.812 dist=30.4 obj=0.1260
+[refg:m45 seed=99] ep_med=1.407s succ=0.688 dist=37.6 obj=0.2266
+[refg:m60 seed=99] ep_med=1.857s succ=0.688 dist=35.4 obj=0.1974
+[hybrid:m45 seed=99] ep_med=1.412s succ=0.719 dist=36.3 obj=0.1670
+[hybrid:m60 seed=99] ep_med=1.867s succ=0.688 dist=39.7 obj=0.1768
+[hybrid:m90-45 seed=99] ep_med=1.868s succ=0.719 dist=36.9 obj=0.1782
+[hybrid:k1000:m60 seed=99] ep_med=1.870s succ=0.781 dist=27.9 obj=0.1380
+[hybrid:k1000:m90-45 seed=99] ep_med=1.872s succ=0.812 dist=27.1 obj=0.1459
+[online:k1000:m60 seed=99] ep_med=2.096s succ=0.750 dist=33.2 obj=0.1659
+
+| method | ep median (s) | step median / p95 (s) | speedup [95% CI] | peak MiB | success | state dist |
+|---|---|---|---|---|---|---|
+| full | 9.204 | 9.204 / 9.657 | 1.00x [1.00, 1.00] | 9459 | 0.812 | 29.9 |
+| few150 | 4.539 | 4.539 / 4.547 | 2.03x [2.01, 2.05] | 4876 | 0.812 | 30.4 |
+| refg:m45 | 1.407 | 1.407 / 1.409 | 6.56x [6.50, 6.63] | 1587 | 0.688 | 37.6 |
+| refg:m60 | 1.857 | 1.857 / 1.860 | 4.97x [4.92, 5.02] | 2020 | 0.688 | 35.4 |
+| hybrid:m45 | 1.412 | 1.412 / 1.418 | 6.53x [6.47, 6.60] | 1601 | 0.719 | 36.3 |
+| hybrid:m60 | 1.867 | 1.867 / 1.872 | 4.94x [4.90, 5.00] | 2037 | 0.688 | 39.7 |
+| hybrid:m90-45 | 1.868 | 1.868 / 1.872 | 4.94x [4.89, 4.99] | 2907 | 0.719 | 36.9 |
+| hybrid:k1000:m60 | 1.870 | 1.870 / 1.872 | 4.93x [4.89, 4.99] | 2037 | 0.781 | 27.9 |
+| hybrid:k1000:m90-45 | 1.872 | 1.872 / 1.891 | 4.92x [4.87, 4.97] | 2908 | 0.812 | 27.1 |
+| online:k1000:m60 | 2.096 | 2.096 / 2.102 | 4.40x [4.36, 4.45] | 8829 | 0.750 | 33.2 |
